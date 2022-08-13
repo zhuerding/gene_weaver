@@ -111,10 +111,18 @@ def km_expression(a, obj4, output, conf):
             'http': 'http://' + proxy,
             'https': 'https://' + proxy
         }
-        if proxy:
-            resp = requests.get(url=url, headers=header, proxies=proxies)
-        else:
-            resp = requests.get(url=url, headers=header)
+        try:
+            if proxy:
+                resp = requests.get(url=url, headers=header, proxies=proxies, timeout=10)
+            else:
+                resp = requests.get(url=url, headers=header, timeout=10)
+        except BaseException as e:
+            if proxy:
+                resp = requests.get(url=url, headers=header, proxies=proxies)
+                print(e)
+            else:
+                resp = requests.get(url=url, headers=header)
+                print(e)
         resp.encoding = 'utf-8'
         result = obj4.search(resp.text)
         time.sleep(gap)  # 间隔
@@ -128,10 +136,18 @@ def km_expression(a, obj4, output, conf):
                 miRNA_len = len(gene) - 3
                 miRNA = gene[:miRNA_len]
                 url1 = f"http://ualcan.path.uab.edu/cgi-bin/TCGA-miR-Result.pl?genenam={miRNA}&ctype={ctype}"
-                if proxy:
-                    html = requests.get(url=url1, headers=header, proxies=proxies)
-                else:
-                    html = requests.get(url=url1, headers=header)
+                try:
+                    if proxy:
+                        html = requests.get(url=url1, headers=header, proxies=proxies, timeout=10)
+                    else:
+                        html = requests.get(url=url1, headers=header, timeout=10)
+                except BaseException as e:
+                    if proxy:
+                        html = requests.get(url=url1, headers=header, proxies=proxies)
+                        print(e)
+                    else:
+                        html = requests.get(url=url1, headers=header)
+                        print(e)
                 html.encoding = 'utf-8'
                 res = obj4.finditer(html.text)
                 for re in res:
@@ -151,18 +167,34 @@ def km_expression(a, obj4, output, conf):
                 print("  未查询到该miRNA前体信息")
                 miRNA_5p = gene + '-5p'
                 url1 = f"http://ualcan.path.uab.edu/cgi-bin/TCGA-miR-Result.pl?genenam={miRNA_5p}&ctype={ctype}"
-                if proxy:
-                    html_5p = requests.get(url=url1, headers=header, proxies=proxies)
-                else:
-                    html_5p = requests.get(url=url1, headers=header)
+                try:
+                    if proxy:
+                        html_5p = requests.get(url=url1, headers=header, proxies=proxies, timeout=10)
+                    else:
+                        html_5p = requests.get(url=url1, headers=header, timeout=10)
+                except BaseException as e:
+                    if proxy:
+                        html_5p = requests.get(url=url1, headers=header, proxies=proxies)
+                        print(e)
+                    else:
+                        html_5p = requests.get(url=url1, headers=header)
+                        print(e)
                 html_5p.encoding = 'utf-8'
                 res_5p = obj4.finditer(html_5p.text)
                 miRNA_3p = gene + '-3p'
                 url2 = f"http://ualcan.path.uab.edu/cgi-bin/TCGA-miR-Result.pl?genenam={miRNA_3p}&ctype={ctype}"
-                if proxy:
-                    html_3p = requests.get(url=url2, headers=header, proxies=proxies)
-                else:
-                    html_3p = requests.get(url=url2, headers=header)
+                try:
+                    if proxy:
+                        html_3p = requests.get(url=url2, headers=header, proxies=proxies, timeout=10)
+                    else:
+                        html_3p = requests.get(url=url2, headers=header, timeout=10)
+                except BaseException as e:
+                    if proxy:
+                        html_3p = requests.get(url=url2, headers=header, proxies=proxies)
+                        print(e)
+                    else:
+                        html_3p = requests.get(url=url2, headers=header)
+                        print(e)
                 html_3p.encoding = 'utf-8'
                 res_3p = obj4.finditer(html_3p.text)
                 p = {}
@@ -186,7 +218,6 @@ def km_expression(a, obj4, output, conf):
             res = obj4.finditer(resp.text)
             for re in res:
                 value = re.group('value')
-                print(gene)
                 print(value)
                 index = a[0].get(gene)
                 sheet.cell(index, 4, value)
@@ -229,10 +260,18 @@ def km_sur_query(a, output, conf):
         print("目前生存分析查询至", num, "/", len(gene_list))
         num = num + 1
         print(gene)
-        if proxy:
-            res2 = requests.get(url=url2, headers=header, proxies=proxies)
-        else:
-            res2 = requests.get(url=url2, headers=header)
+        try:
+            if proxy:
+                res2 = requests.get(url=url2, headers=header, proxies=proxies, timeout=10)
+            else:
+                res2 = requests.get(url=url2, headers=header, timeout=10)
+        except BaseException as e:
+            if proxy:
+                res2 = requests.get(url=url2, headers=header, proxies=proxies)
+                print(e)
+            else:
+                res2 = requests.get(url=url2, headers=header)
+                print(e)
         content = res2.content
         obj = re.compile(f'svg(.*?)</p>')
         obj2 = re.compile(f'p=(?P<value>.*?\n)')
@@ -258,10 +297,18 @@ def km_sur_query(a, output, conf):
             miRNA_len = len(gene) - 3
             miRNA = gene[:miRNA_len]
             url2 = f'http://ualcan.path.uab.edu/images/survival-TCGA/miRNA/{cc}-miR-KMinput/Exp/{miRNA}-KM-Exp.svg'
-            if proxy:
-                html = requests.get(url=url2, headers=header, proxies=proxies)
-            else:
-                html = requests.get(url=url2, headers=header)
+            try:
+                if proxy:
+                    html = requests.get(url=url2, headers=header, proxies=proxies, timeout=10)
+                else:
+                    html = requests.get(url=url2, headers=header, timeout=10)
+            except BaseException as e:
+                if proxy:
+                    html = requests.get(url=url2, headers=header, proxies=proxies)
+                    print(e)
+                else:
+                    html = requests.get(url=url2, headers=header)
+                    print(e)
             content2 = html.content
             res = obj.search(str(content2))
             if res is None:
@@ -290,10 +337,17 @@ def km_sur_query(a, output, conf):
             print("  未查询到该miRNA成熟体信息")
             miRNA_5p = gene + '-5p'
             url_5p = f'http://ualcan.path.uab.edu/images/survival-TCGA/miRNA/{cc}-miR-KMinput/Exp/{miRNA_5p}-KM-Exp.svg'
-            if proxy:
-                html_5p = requests.get(url=url_5p, headers=header, proxies=proxies)
-            else:
-                html_5p = requests.get(url=url_5p, headers=header)
+            try:
+                if proxy:
+                    html_5p = requests.get(url=url_5p, headers=header, proxies=proxies, timeout=10)
+                else:
+                    html_5p = requests.get(url=url_5p, headers=header, timeout=10)
+            except BaseException as e:
+                if proxy:
+                    html_5p = requests.get(url=url_5p, headers=header, proxies=proxies)
+                    print(e)
+                else:
+                    html_5p = requests.get(url=url_5p, headers=header)
             content_5p = html_5p.content
             res = obj.search(str(content_5p))
             p = {}
@@ -310,10 +364,17 @@ def km_sur_query(a, output, conf):
                     p["value_5p"] = value_5p
             miRNA_3p = gene + '-3p'
             url_3p = f'http://ualcan.path.uab.edu/images/survival-TCGA/miRNA/{cc}-miR-KMinput/Exp/{miRNA_3p}-KM-Exp.svg'
-            if proxy:
-                html_3p = requests.get(url=url_3p, headers=header, proxies=proxies)
-            else:
-                html_3p = requests.get(url=url_3p, headers=header)
+            try:
+                if proxy:
+                    html_3p = requests.get(url=url_3p, headers=header, proxies=proxies, timeout=10)
+                else:
+                    html_3p = requests.get(url=url_3p, headers=header, timeout=10)
+            except BaseException as e:
+                if proxy:
+                    html_3p = requests.get(url=url_3p, headers=header, proxies=proxies)
+                    print(e)
+                else:
+                    html_3p = requests.get(url=url_3p, headers=header)
             content_3p = html_3p.content
             res = obj.search(str(content_3p))
             if res is None:
@@ -582,25 +643,22 @@ def cnki(a, output, conf, mix):
                 mix[gene] = {'cnki_degree': 1, 'index': a[0].get(gene)}
                 sheet.cell(index, 6, 'Very High')
                 output.save('./' + folder + '/' + name + '.xlsx')
-                return mix
             if 30 <= degree['max'] <= 80 or degree['average'] >= 50:
                 print('识别完毕，可疑度为high，建议手动确认后进行靶基因筛查')
                 mix[gene] = {'cnki_degree': 2, 'index': a[0].get(gene)}
                 sheet.cell(index, 6, 'High')
                 output.save('./' + folder + '/' + name + '.xlsx')
-                return mix
             if degree['max'] <= 30:
                 print('识别完毕，可疑度为low，建议手动确认后进行靶基因筛查')
                 mix[gene] = {'cnki_degree': 3, 'index': a[0].get(gene)}
                 sheet.cell(index, 6, 'low')
                 output.save('./' + folder + '/' + name + '.xlsx')
-                return mix
         else:
             print("中国知网中没有关于该miRNA的可疑结果:None")
             sheet.cell(index, 6, 'None')
             mix[gene] = {'cnki_degree': 4, 'index': a[0].get(gene)}
             output.save('./' + folder + '/' + name + '.xlsx')
-            return mix
+    return mix
 
 
 #  PubMed数据库检索
@@ -653,28 +711,25 @@ def pubmed(a, output, conf, mix):
                 mix[gene]['index'] = a[0].get(gene)
                 sheet.cell(index, 7, 'Very High')
                 output.save('./' + folder + '/' + name + '.xlsx')
-                return mix
             if 30 <= degree['max'] <= 80 or degree['average'] >= 40:
                 print('识别完毕，可疑度为high，建议手动确认后进行靶基因筛查')
                 mix[gene]['pubmed_degree'] = 2
                 mix[gene]['index'] = a[0].get(gene)
                 sheet.cell(index, 7, 'High')
                 output.save('./' + folder + '/' + name + '.xlsx')
-                return mix
             if degree['max'] <= 30:
                 print('识别完毕，可疑度为low，建议手动确认后进行靶基因筛查')
                 mix[gene]['pubmed_degree'] = 3
                 mix[gene]['index'] = a[0].get(gene)
                 sheet.cell(index, 7, 'low')
                 output.save('./' + folder + '/' + name + '.xlsx')
-                return mix
         else:
             print("PubMed中没有关于该miRNA的可疑结果:None")
             sheet.cell(index, 7, 'None')
             mix[gene]['pubmed_degree'] = 4
             mix[gene]['index'] = a[0].get(gene)
             output.save('./' + folder + '/' + name + '.xlsx')
-            return mix
+    return mix
 
 
 # 配置文件解析
@@ -904,12 +959,22 @@ def mirwalk_query(conf, gene, target):
         "User-Agent": headers[header_id],
     }
     session = requests.session()
-    if proxy:
-        session.get(url, headers=header, proxies=proxies)
-        html = requests.get(url, headers=header, proxies=proxies)
-    else:
-        session.get(url, headers=header)
-        html = requests.get(url, headers=header)
+    try:
+        if proxy:
+            session.get(url, headers=header, proxies=proxies, timeout=20)
+            html = requests.get(url, headers=header, proxies=proxies, timeout=20)
+        else:
+            session.get(url, headers=header, timeout=20)
+            html = requests.get(url, headers=header, timeout=20)
+    except BaseException as e:
+        if proxy:
+            session.get(url, headers=header, proxies=proxies)
+            html = requests.get(url, headers=header, proxies=proxies)
+            print(e)
+        else:
+            session.get(url, headers=header, proxies=proxies)
+            html = requests.get(url, headers=header, proxies=proxies)
+            print(e)
     obj = re.compile(r'No ID matched your search criteria')
     obj2 = re.compile(r'was not found in our database')
     mirwalk_gene_symbol = []
@@ -917,10 +982,18 @@ def mirwalk_query(conf, gene, target):
         session.get(url, headers=header)
         cookie = session.cookies
         url2 = 'http://mirwalk.umm.uni-heidelberg.de/export/'
-        if proxy:
-            resp = requests.get(url2, headers=header, cookies=cookie, proxies=proxies)
-        else:
-            resp = requests.get(url2, headers=header, cookies=cookie)
+        try:
+            if proxy:
+                resp = requests.get(url2, headers=header, cookies=cookie, proxies=proxies, timeout=20)
+            else:
+                resp = requests.get(url2, headers=header, cookies=cookie, timeout=20)
+        except BaseException as e:
+            if proxy:
+                resp = requests.get(url2, headers=header, cookies=cookie, proxies=proxies)
+                print(e)
+            else:
+                resp = requests.get(url2, headers=header, cookies=cookie)
+                print(e)
         resp.encoding = 'utf-8'
         res = resp.content
         name = conf[2]['folder'] + '/' + gene + "/" + "mirWalk" + '.csv'
@@ -972,10 +1045,18 @@ def mirdb_query(conf, gene):
         'submitButton': 'Go',
         'searchType': 'miRNA'
     }
-    if proxy:
-        resp = requests.post(url=url, headers=header, proxies=proxies, data=data)
-    else:
-        resp = requests.post(url, headers=header, data=data)
+    try:
+        if proxy:
+            resp = requests.post(url=url, headers=header, proxies=proxies, data=data, timeout=20)
+        else:
+            resp = requests.post(url, headers=header, data=data, timeout=20)
+    except BaseException as e:
+        if proxy:
+            resp = requests.post(url=url, headers=header, proxies=proxies, data=data)
+            print(e)
+        else:
+            resp = requests.post(url, headers=header, data=data)
+            print(e)
     resp.encoding = 'utf-8'
     obj = re.compile(r'no Human miRNA is predicted to target symbol')
     mirdb_gene_symbol = []
@@ -1153,10 +1234,18 @@ def targetscan_query(conf, gene):
         'http': 'http://' + proxy,
         'https': 'https://' + proxy
     }
-    if proxy:
-        resp = requests.get(url=url, headers=header, proxies=proxies)
-    else:
-        resp = requests.get(url, headers=header)
+    try:
+        if proxy:
+            resp = requests.get(url=url, headers=header, proxies=proxies, timeout=20)
+        else:
+            resp = requests.get(url, headers=header, timeout=20)
+    except BaseException as e:
+        if proxy:
+            resp = requests.get(url=url, headers=header, proxies=proxies)
+            print(e)
+        else:
+            resp = requests.get(url, headers=header)
+            print(e)
     resp.encoding = 'utf-8'
     obj = re.compile(r'Not Found')
     res = obj.search(resp.text)
@@ -1207,10 +1296,18 @@ def tarbase_query(conf, gene):
         'http': 'http://' + proxy,
         'https': 'https://' + proxy
     }
-    if proxy:
-        resp = requests.get(url=url, headers=header, proxies=proxies)
-    else:
-        resp = requests.get(url, headers=header)
+    try:
+        if proxy:
+            resp = requests.get(url=url, headers=header, proxies=proxies, timeout=20)
+        else:
+            resp = requests.get(url, headers=header, timeout=20)
+    except BaseException as e:
+        if proxy:
+            resp = requests.get(url=url, headers=header, proxies=proxies)
+            print(e)
+        else:
+            resp = requests.get(url, headers=header)
+            print(e)
     resp.encoding = 'utf-8'
     obj = re.compile(r'cannot be found in the database')
     tarbase_gene_symbol = []
@@ -1235,10 +1332,18 @@ def tarbase_query(conf, gene):
                    f']=&sources[]=1&sources[]=7&sources[]=9&publication_year=&prediction_score=&sort_field=score' \
                    f'&sort_type=DESC&query=1&page={jzy}'
             name1 = conf[2]['folder'] + '/' + gene + "/" + "TarBase" + '/' + 'TarBase_' + str(jzy) + '.html'
-            if proxy:
-                resp = requests.get(url=url2, headers=header, proxies=proxies)
-            else:
-                resp = requests.get(url2, headers=header)
+            try:
+                if proxy:
+                    resp = requests.get(url=url2, headers=header, proxies=proxies, timeout=20)
+                else:
+                    resp = requests.get(url2, headers=header, timeout=20)
+            except BaseException as e:
+                if proxy:
+                    resp = requests.get(url=url2, headers=header, proxies=proxies)
+                    print(e)
+                else:
+                    resp = requests.get(url2, headers=header)
+                    print(e)
             resp.encoding = 'utf-8'
             et = etree.HTML(resp.text)
             trs = et.xpath('//tr[@class="first-level"]')
@@ -1373,7 +1478,6 @@ def route(conf, mix, a):
     df.set_index('Name', inplace=True)
     gap = float(conf[0]["gap"])
     for gene in gene_list:
-        print('开始' + gene + '靶基因筛查')
         pubmed = mix[gene]['pubmed_degree']
         cnki = mix[gene]['cnki_degree']
         if pubmed > cnki:
@@ -1385,6 +1489,7 @@ def route(conf, mix, a):
             target[gene] = {'index': mix[gene]['index'], 'ID': ID}
             lst.append(gene)
     for gene in lst:
+        print('开始' + gene + '靶基因筛查')
         gene_symbol = {}
         os.mkdir(conf[2]["folder"] + '/' + gene)
         if 'mirwalk' in conf[1]['protein']:
@@ -1445,7 +1550,7 @@ def main():
         pass
     else:
         print('\033[1;31m 基因序列文库损毁\033[0m')
-        print('请在https://github.com/zhuerding/Bioinformatics中重新下载一份')
+        print('请在https://github.com/zhuerding/gene_weaver中重新下载一份')
         print('自动修复功能开发中……')
         print('\033[1;33m 10\033[0m' + '秒后自动关闭程序')
         time.sleep(10)
@@ -1559,7 +1664,7 @@ def main():
         if 'pubmed' in conf[1]['paper']:
             print('')
             print("开始https://pubmed.ncbi.nlm.nih.gov/文献检索")
-            mix = pubmed(a, output, conf, mix)
+            pubmed(a, output, conf, mix)
         print('\n')
         print('')
         if mix != {}:
@@ -1638,6 +1743,7 @@ def make_print_to_file(path):
 def information():
     print("欢迎使用gene weaver")
     print("查看目前功能及注意事项请移步readme.md")
+    print('BUG反馈、学术交流、创意分析请联系\033[3;36mzhuerding@zhuerding.top\033[0m')
     print('\n')
     time.sleep(1)
 
@@ -1650,5 +1756,5 @@ if __name__ == '__main__':
     time = t2 - t1
     print('共运行' + f'\033[1;36m{time}\033[0m' + '秒，超过了全国99.99%的用户')
     print('本程序版本' + '\033[3;31mV1.5.0001\033[0m')
-    print('您可以在' + '\033[3;31mhttps://github.com/zhuerding/genewaver\033[0m' + '获取本程序最新的版本')
+    print('您可以在' + '\033[3;31mhttps://github.com/zhuerding/gene_weaver\033[0m' + '获取本程序最新的版本')
     input('欢迎使用，按任意键退出程序')
