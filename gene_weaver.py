@@ -79,7 +79,7 @@ def analysis(a, obj5):
                         lst.append("hsa-miR-" + res.group("name"))
         gene_set = dict(Counter(lst))
         source = [key for key, value in gene_set.items() if value > 1]
-    print("共" + str(len(source)) + "个交集基因")
+    print("共" + str(len(source)) + "个交集miRNA")
     print(source)
     return source
 
@@ -156,12 +156,12 @@ def km_expression(a, obj4, output, conf):
                     value_plus = re.group('value')
                     if value_plus is None:
                         print("  未查询到该miRNA前体信息")
-                        print('  恭喜这个基因寄了')
+                        print('  恭喜这个miRNA寄了')
                     else:
                         index = a[0].get(gene)
                         value_plus1 = value_plus + '（前体）'
                         sheet.cell(index, 4, value_plus1)
-                        output.save('./' + folder + '/' + name + '.xlsx')
+                        output.save(folder + '/' + name + '.xlsx')
                     print("  查询到该miRNA前体信息")
                     print("  ", miRNA)
                     print("  ", value_plus)
@@ -213,7 +213,7 @@ def km_expression(a, obj4, output, conf):
                     index = a[0].get(gene)
                     p_value = p["p5_plus"] + '(5p)' + '\n' + p["p3_plus"] + '(3p)'
                     sheet.cell(index, 4, p_value)
-                    output.save('./' + folder + '/' + name + '.xlsx')
+                    output.save(folder + '/' + name + '.xlsx')
                     print("  查询到该miRNA成熟体信息")
                     print("  ", p)
         else:
@@ -223,7 +223,7 @@ def km_expression(a, obj4, output, conf):
                 print(value)
                 index = a[0].get(gene)
                 sheet.cell(index, 4, value)
-                output.save('./' + folder + '/' + name + '.xlsx')
+                output.save(folder + '/' + name + '.xlsx')
     print("差异表达查询完毕")
 
 
@@ -293,7 +293,7 @@ def km_sur_query(a, output, conf):
                 print(value)
                 index = a[0].get(gene_index[0])
                 sheet.cell(index, 5, value)
-                output.save('./' + folder + '/' + name + '.xlsx')
+                output.save(folder + '/' + name + '.xlsx')
         elif '3p' or '5p' in gene:
             print("  未查询到该miRNA成熟体信息")
             miRNA_len = len(gene) - 3
@@ -331,7 +331,7 @@ def km_sur_query(a, output, conf):
                     index = a[0].get(gene_index[0])
                     value_plus = value + '（前体）'
                     sheet.cell(index, 5, value_plus)
-                    output.save('./' + folder + '/' + name + '.xlsx')
+                    output.save(folder + '/' + name + '.xlsx')
             else:
                 print("  未查询到该miRNA前体信息")
                 print("  这个miRNA寄了")
@@ -398,7 +398,7 @@ def km_sur_query(a, output, conf):
                 index = a[0].get(gene_index[0])
                 p_value = p["p5_plus"] + '(5p)' + '\n' + p["p3_plus"] + '(3p)'
                 sheet.cell(index, 5, p_value)
-                output.save('./' + folder + '/' + name + '.xlsx')
+                output.save(folder + '/' + name + '.xlsx')
                 print("查询到该miRNA前体信息")
                 print(p_value)
 
@@ -458,7 +458,7 @@ def bd_query(gene_list, obj, obj2, obj3, output, conf):
                 bd_value = value
                 lst = [gene_name, bd_value]
                 sheet.append(lst)
-                output.save('./' + folder + '/' + name + '.xlsx')
+                output.save(folder + '/' + name + '.xlsx')
                 index[gene_name] = num
             elif float(value) > 0.05 or float(value) == 0:
                 continue
@@ -468,11 +468,11 @@ def bd_query(gene_list, obj, obj2, obj3, output, conf):
                 bd_value = value
                 lst = [gene_name, bd_value]
                 sheet.append(lst)
-                output.save('./' + folder + '/' + name + '.xlsx')
+                output.save(folder + '/' + name + '.xlsx')
                 index[gene_name] = num
     print('')
     print("差异表达查询完成")
-    print("下列基因符合条件", appear)
+    print("下列miRNA符合条件", appear)
     return index, appear
 
 
@@ -528,18 +528,17 @@ def sur_query(a, obj, obj2, obj3, output, conf):
             index = a[0].get(gene)
             if "e" in p:  # 判断p值
                 sheet.cell(index, 3, value)
-                output.save('./' + folder + '/' + name + '.xlsx')
+                output.save(folder + '/' + name + '.xlsx')
             elif float(value) > 0.05 or float(value) == 0:
                 sheet.cell(index, 1, '')
                 sheet.cell(index, 2, '')
-                output.save('./' + folder + '/' + name + '.xlsx')
+                output.save(folder + '/' + name + '.xlsx')
                 appear.remove(gene)
             elif 0.05 >= float(value):
                 sheet.cell(index, 3, value)
-                output.save('./' + folder + '/' + name + '.xlsx')
+                output.save(folder + '/' + name + '.xlsx')
     print('')
     print("生存曲线查询完毕")
-    print("下列基因符合条件", appear)
     return appear
 
 
@@ -641,25 +640,25 @@ def cnki(a, output, conf, mix):
             print("中国知网中存在关于该miRNA的可疑结果，正在进行可疑度甄别")
             degree = paper_analaysis(resp.text, conf)
             if degree['max'] >= 80:
-                print('识别完毕，可疑度为very high，不建议进行靶基因筛查')
+                print('识别完毕，可疑度为', '\033[1;31mVery High\033[0m', '，不建议进行靶基因筛查')
                 mix[gene] = {'cnki_degree': 1, 'index': a[0].get(gene)}
-                sheet.cell(index, 6, 'Very High')
-                output.save('./' + folder + '/' + name + '.xlsx')
+                sheet.cell(index, 6, '\033[1;31mVery High\033[0m')
+                output.save(folder + '/' + name + '.xlsx')
             if 30 <= degree['max'] <= 80 or degree['average'] >= 50:
-                print('识别完毕，可疑度为high，建议手动确认后进行靶基因筛查')
+                print('识别完毕，可疑度为', '\033[1;32mHigh\033[0m', '，建议手动确认后进行靶基因筛查')
                 mix[gene] = {'cnki_degree': 2, 'index': a[0].get(gene)}
                 sheet.cell(index, 6, 'High')
-                output.save('./' + folder + '/' + name + '.xlsx')
+                output.save(folder + '/' + name + '.xlsx')
             if degree['max'] <= 30:
-                print('识别完毕，可疑度为low，建议手动确认后进行靶基因筛查')
+                print('识别完毕，可疑度为', '\033[1;33mlow\033[0m', '，建议手动确认后进行靶基因筛查')
                 mix[gene] = {'cnki_degree': 3, 'index': a[0].get(gene)}
-                sheet.cell(index, 6, 'low')
-                output.save('./' + folder + '/' + name + '.xlsx')
+                sheet.cell(index, 6, 'Low')
+                output.save(folder + '/' + name + '.xlsx')
         else:
-            print("中国知网中没有关于该miRNA的可疑结果:None")
+            print("中国知网中没有关于该miRNA的可疑结果:", "\033[1;36mNone\033[0m")
             sheet.cell(index, 6, 'None')
             mix[gene] = {'cnki_degree': 4, 'index': a[0].get(gene)}
-            output.save('./' + folder + '/' + name + '.xlsx')
+            output.save(folder + '/' + name + '.xlsx')
     return mix
 
 
@@ -708,29 +707,29 @@ def pubmed(a, output, conf, mix):
             print("PubMed中存在关于该miRNA的可疑结果，正在进行可疑度甄别")
             degree = paper_analaysis(resp.text, conf)
             if degree['max'] >= 80:
-                print('识别完毕，可疑度为very high，不建议进行靶基因筛查')
+                print('识别完毕，可疑度为' + '\033[1;31mVery High\033[0m' + '，不建议进行靶基因筛查')
                 mix[gene]['pubmed_degree'] = 1
                 mix[gene]['index'] = a[0].get(gene)
                 sheet.cell(index, 7, 'Very High')
-                output.save('./' + folder + '/' + name + '.xlsx')
+                output.save(folder + '/' + name + '.xlsx')
             if 30 <= degree['max'] <= 80 or degree['average'] >= 40:
-                print('识别完毕，可疑度为high，建议手动确认后进行靶基因筛查')
+                print('识别完毕，可疑度为', '\033[1;32mHigh\033[0m', '，建议手动确认后进行靶基因筛查')
                 mix[gene]['pubmed_degree'] = 2
                 mix[gene]['index'] = a[0].get(gene)
                 sheet.cell(index, 7, 'High')
-                output.save('./' + folder + '/' + name + '.xlsx')
+                output.save(folder + '/' + name + '.xlsx')
             if degree['max'] <= 30:
-                print('识别完毕，可疑度为low，建议手动确认后进行靶基因筛查')
+                print('识别完毕，可疑度为', '\033[1;33mLow\033[0m', '，建议手动确认后进行靶基因筛查')
                 mix[gene]['pubmed_degree'] = 3
                 mix[gene]['index'] = a[0].get(gene)
                 sheet.cell(index, 7, 'low')
-                output.save('./' + folder + '/' + name + '.xlsx')
+                output.save(folder + '/' + name + '.xlsx')
         else:
-            print("PubMed中没有关于该miRNA的可疑结果:None")
+            print("PubMed中没有关于该miRNA的可疑结果:", "\033[1;36mNone\033[0m")
             sheet.cell(index, 7, 'None')
             mix[gene]['pubmed_degree'] = 4
             mix[gene]['index'] = a[0].get(gene)
-            output.save('./' + folder + '/' + name + '.xlsx')
+            output.save(folder + '/' + name + '.xlsx')
     return mix
 
 
@@ -863,19 +862,10 @@ def ini():
                 pass
             else:
                 protein.append(protein_lst)
-        input_fuzzy_list = inifile.get('query', 'fuzzy')
-        fuzzy_lists = obj.finditer(input_fuzzy_list)
-        for fuzzy_list in fuzzy_lists:
-            fuzzy_lst = fuzzy_list.group('data')
-            if fuzzy_lst == ',':
-                pass
-            else:
-                fuzzy.append(fuzzy_lst)
         query['db'] = db
         query['paper'] = paper
         query['cc'] = cc
         query['protein'] = protein
-        query['fuzzy'] = fuzzy
         query['model'] = model
         if paper and model == "0":
             print('')
@@ -893,13 +883,13 @@ def ini():
         res = dt.strftime('%y-%m-%d %H：%M：%S')
         name_list = {}
         if e_name:
-            folder = '/output' + '/' + e_name + ' ' + res + ' ' + cc + ' ' + 'gene waver 1.0' + ' output'
+            folder = './output' + '/' + e_name + ' ' + res + ' ' + cc + ' ' + 'gene waver 1.0' + ' output'
             print('')
             print('欢迎' + e_name + '使用本程序')
             print('撒花~')
             time.sleep(0.5)
         else:
-            folder = '/output' + '/' + res + ' ' + cc + ' ' + 'gene weaver 1.5' + ' output'
+            folder = './output' + '/' + res + ' ' + cc + ' ' + 'gene weaver 1.5' + ' output'
         name_list["folder"] = folder
         name = res + ' ' + cc
         name_list['name'] = name
@@ -925,7 +915,6 @@ def ini():
                  "\n# 支持数据库：miRDB(http://mirdb.org/)、mirDIP(https://ophid.utoronto.ca/mirDIP/)" \
                  "\n# 支持数据库：TarBase（https://dianalab.e-ce.uth.gr/html/diana/web/index.php?r=tarbasev8）" \
                  "\nprotein = ['mirdb','mirdip','mirwalk','targetscan','tarbase']" \
-                 "\n# 是否进行模糊查询，例如没有miRNA成熟体相关信息时使用其前体信息，是为1，否为0\nfuzzy = 1" \
                  "\n# 文献重合度检索，在miRNA文献重合度为某等级以上进行靶基因检索\n# 可写参数：4（None）、3（low）、2（high）、1（very high）、0（all）" \
                  "\n# 当不填写文献检索数据库且仍需筛查靶基因时，请使用参数0，其他情况不要使用\n# 文献重合度界定详情请阅读./readme.md文件\nmodel = 3"
         f.write(config)
@@ -1311,7 +1300,7 @@ def tarbase_query(conf, gene):
             resp = requests.get(url, headers=header)
             print(e)
     resp.encoding = 'utf-8'
-    obj = re.compile(r'cannot be found in the database')
+    obj = re.compile(r'No Results found')
     tarbase_gene_symbol = []
     with open(name, 'wb') as f:
         f.write(resp.content)
@@ -1377,6 +1366,7 @@ def tarbase_query(conf, gene):
 # Veen图查询函数：
 def venn(conf, gene, gene_symbol, db_list):
     import re
+    os.mkdir(conf[2]['folder'] + '/' + gene + "/" + 'Venn')
     list1 = ''
     namelist1 = ''
     list2 = ''
@@ -1456,13 +1446,13 @@ def venn(conf, gene, gene_symbol, db_list):
         resp.encoding = 'utf-8'
         obj = re.compile(r"href='(?P<path>.*?)' d")
         res = obj.findall(resp.text)
-        if resp.text:
-            with open(name, "wb") as f:
-                f.write(resp.content)
-                f.close()
         print(e)
     else:
         pass
+    if resp.text:
+        with open(name, "wb") as f:
+            f.write(resp.content)
+            f.close()
     path = 'http://bioinformatics.psb.ugent.be' + res[1]
     txt = 'http://bioinformatics.psb.ugent.be' + res[2]
     svg = requests.get(path, headers=header)
@@ -1499,7 +1489,9 @@ def route(conf, mix, a):
             ID = df.loc[gene, 'ID']
             target[gene] = {'index': mix[gene]['index'], 'ID': ID}
             lst.append(gene)
+    print("以下miRNA可以使用", lst)
     for gene in lst:
+        print('')
         print('开始' + gene + '靶基因筛查')
         gene_symbol = {}
         db_list = []
@@ -1540,10 +1532,10 @@ def route(conf, mix, a):
         num_db = len(conf[1]['protein'])
         num = 1
         while num < num_db:
-            sheet.cell(1, num, conf[1]['protein'][num])
+            sheet.cell(1, num, db_list[num - 1])
             intersection.save(conf[2]["folder"] + '/' + gene + '/' + 'intersection' + '.xlsx')
             step = 2
-            for symbol in gene_symbol[conf[1]['protein'][num]]:
+            for symbol in gene_symbol[db_list[num - 1]]:
                 sheet.cell(step, num, symbol)
                 step += 1
             intersection.save(conf[2]["folder"] + '/' + gene + '/' + 'intersection' + '.xlsx')
@@ -1551,6 +1543,7 @@ def route(conf, mix, a):
         print('')
         print('靶蛋白文件输出完成')
         if conf[0]['venn'] == '1' and len(conf[1]['protein']) >= 2:
+            print('')
             print('韦恩图生成中')
             venn(conf, gene, gene_symbol, db_list)
             print('韦恩图生成完毕')
@@ -1583,7 +1576,7 @@ def main():
         data_list = []
         print('')
         print("未识别到配置文件中的GSE数据集地址，手动导入数据集模式启动：")
-        print('\033[3;31m 请确保基因名位于第一列，且数据集为tsv格式、utf-8编码\033[0m')
+        print('\033[3;31m 请确保miRNA名位于第一列，且数据集为tsv格式、utf-8编码\033[0m')
         print("当输入" + '\033[1;36m’y‘\033[0m' + "时导入进程结束")
         a = enter(data_list)
         print('')
@@ -1632,7 +1625,7 @@ def main():
     obj2 = re.compile(r"<td>(.*?)<")
     obj3 = re.compile(r"e")
     obj4 = re.compile(r'Normal-vs-Primary</td>.*?>(?P<value>.*?)</td>')
-    # 提取基因名
+    # 提取miRNA名
     gene_list = source
     print('')
     print("文件解析完成")
@@ -1642,10 +1635,10 @@ def main():
     name = conf[2]["name"]
     os.mkdir(folder)
     log(folder)
-    path = './' + folder
+    path = folder
     if conf[0]['log'] == '1':
         make_print_to_file(path)  # 日志记录
-    output.save('./' + folder + '/' + name + '.xlsx')
+    output.save(folder + '/' + name + '.xlsx')
     sheet = output.active
     sheet['A1'] = 'gene name'
     sheet['B1'] = 'expression pvalue(starbase)'
@@ -1654,7 +1647,7 @@ def main():
     sheet['E1'] = 'survival analysis pvalue(ualcan)'
     sheet['F1'] = 'cnki'
     sheet['G1'] = 'PubMed'
-    output.save('./' + folder + '/' + name + '.xlsx')
+    output.save(folder + '/' + name + '.xlsx')
     print('\n')
     print("开始查询https://starbase.sysu.edu.cn/数据库")
     print("开始查询差异表达")
@@ -1664,14 +1657,14 @@ def main():
     b = sur_query(a, obj, obj2, obj3, output, conf)
     if not b:
         print('\n')
-        print("\033[3;31m没有符合条件的基因\033[0m")
-        os.remove('./' + folder + '/' + name + '.xlsx')
+        print("\033[3;31m没有符合条件的miRNA\033[0m")
+        os.remove(folder + '/' + name + '.xlsx')
         print('\033[1;33m 3\033[0m' + '秒后自动关闭程序')
         time.sleep(3)
         sys.exit()
     else:
         print('')
-        print("以下基因可以使用", b)
+        print("以下miRNA可以使用", b)
         if 'ualcan' in conf[1]["db"]:
             print('')
             print("开始查询http://ualcan.path.uab.edu/数据库")
@@ -1706,12 +1699,12 @@ def main():
             pass
         else:
             sheet.delete_cols(idx=6, amount=1)
-        output.save('./' + folder + '/' + name + '.xlsx')
-        df = pd.read_excel('./' + folder + '/' + name + '.xlsx', sheet_name='Sheet')
+        output.save(folder + '/' + name + '.xlsx')
+        df = pd.read_excel(folder + '/' + name + '.xlsx', sheet_name='Sheet')
         df1 = df.dropna(subset=['gene name'])
-        df1.to_excel('./' + folder + '/' + name + '.xlsx', index=False)
+        df1.to_excel(folder + '/' + name + '.xlsx', index=False)
         df2 = df.dropna(axis=1)
-        df2.to_excel('./' + folder + '/' + name + '.xlsx', index=False)
+        df2.to_excel(folder + '/' + name + '.xlsx', index=False)
         print(df2)
         print("查询完毕" + "\n" + "乌拉")
         print("正在保存文件，请不要关闭程序")
@@ -1727,7 +1720,6 @@ def main():
                 zip.close()
         time.sleep(2)
         print('保存完毕')
-        os.remove(folder + '/bug.log')
 
 
 def compressFolder(folderPath, compressPathName):
@@ -1780,7 +1772,7 @@ def log(folder):
 
 
 def information():
-    print("欢迎使用gene weaver")
+    print("欢迎使用", "\033[1;36mGene Weaver\033[0m")
     print("查看目前功能及注意事项请移步readme.md")
     print('BUG反馈、学术交流、创意分析请联系\033[3;36mzhuerding@zhuerding.top\033[0m')
     print('\n')
