@@ -11,6 +11,7 @@ import traceback
 import urllib.parse
 import urllib.request
 
+import logging
 import cairosvg
 import openpyxl
 import pandas as pd
@@ -19,6 +20,7 @@ import requests
 from PIL import Image
 from fuzzywuzzy import fuzz
 from lxml import etree
+import colorama
 
 
 #  使用前须知：
@@ -891,13 +893,13 @@ def ini():
         res = dt.strftime('%y-%m-%d %H：%M：%S')
         name_list = {}
         if e_name:
-            folder = e_name + ' ' + res + ' ' + cc + ' ' + 'gene waver 1.0' + ' output'
+            folder = '/output' + '/' + e_name + ' ' + res + ' ' + cc + ' ' + 'gene waver 1.0' + ' output'
             print('')
             print('欢迎' + e_name + '使用本程序')
             print('撒花~')
             time.sleep(0.5)
         else:
-            folder = res + ' ' + cc + ' ' + 'gene waver 1.0' + ' output'
+            folder = '/output' + '/' + res + ' ' + cc + ' ' + 'gene weaver 1.5' + ' output'
         name_list["folder"] = folder
         name = res + ' ' + cc
         name_list['name'] = name
@@ -910,7 +912,7 @@ def ini():
                  "# 查询间隔时间，建议大于0.5s，不需要添加单位（单位为s）\ngap = 0.5\n# 在靶蛋白搜索时是否保存数据库导出的csv文件，是为1，否为0" \
                  "\nsave = 0\n# 是否生成日志文件，是为1，否为0\nlog = 1\n# 代理服务器ip地址，例如192.168.0.1:80（可不填）\n" \
                  "proxy =\n# 是否生成靶蛋白韦恩图（查询的数据库数需>=2），是为1，否为0\nvenn = 1\n" \
-                 "# 是否将输出文件打包成压缩包（方便课题组在服务器上运行后下载）（选填），是为1，否为0\nzip = 0\n"\
+                 "# 是否将输出文件打包成压缩包（方便课题组在服务器上运行后下载）（选填），是为1，否为0\nzip = 0\n" \
                  '# 电子签名，方便课题组在服务器或公用电脑上运行时标识身份（选填）(不能出现*:<?/">|\)\ne_name =\n\n' \
                  "[query]\n# 需要miRNA查询的数据库（格式为在[]中加入,'XXX'即可）\n# 支持数据库：starbase(https://starbase.sysu.edu.cn/)、" \
                  "ualcan（http://ualcan.path.uab.edu/）\n# 因为各方面原因，暂时将starbase数据库作为主数据库，请勿删去’starbase‘\n" \
@@ -1118,24 +1120,24 @@ def mirdip_query(conf, gene):
         def bidirectionalSearch(self, geneSymbols, microRNAs, minimumScore, sources, occurrances):
 
             '''
-                String url_b = url + "/Http_B";
+				String url_b = url + "/Http_B";
 
-                String parameters =
-                        "genesymbol=" + geneSymbols +
-                        "&" + "microrna=" + microRNAs +
-                        "&" + "scoreClass=" + mapScore.get(minimumScore) +
-                        "&" + "dbOccurrences=" + occurrances +
-                        "&" + "sources=" + sources;
+				String parameters =
+						"genesymbol=" + geneSymbols +
+						"&" + "microrna=" + microRNAs +
+						"&" + "scoreClass=" + mapScore.get(minimumScore) +
+						"&" + "dbOccurrences=" + occurrances +
+						"&" + "sources=" + sources;
 
-                int responseCode = sendPost(url_b, parameters);
-                return responseCode;
-            '''
+				int responseCode = sendPost(url_b, parameters);
+				return responseCode;
+			'''
 
             self.sendPost(self.url + "/Http_B", geneSymbols, microRNAs, self.mapScore[minimumScore], sources,
                           occurrances)
             return
 
-            # .. serve POST request
+        # .. serve POST request
 
         def sendPost(self, url_, geneSymbols, microrna, minimumScore, sources='', occurrances='1'):
 
@@ -1373,7 +1375,7 @@ def tarbase_query(conf, gene):
 
 
 # Veen图查询函数：
-def venn(conf, gene, gene_symbol):
+def venn(conf, gene, gene_symbol, db_list):
     import re
     list1 = ''
     namelist1 = ''
@@ -1385,19 +1387,19 @@ def venn(conf, gene, gene_symbol):
     namelist4 = ''
     list5 = ''
     namelist5 = ''
-    if 'mirwalk' in conf[1]['protein']:
+    if 'mirwalk' in db_list:
         list1 = '\n'.join(gene_symbol['mirwalk'])
         namelist1 = 'mirwalk'
-    if 'mirdip' in conf[1]['protein']:
+    if 'mirdip' in db_list:
         list2 = '\n'.join(gene_symbol['mirdip'])
         namelist2 = 'mirdip'
-    if 'mirdb' in conf[1]['protein']:
+    if 'mirdb' in db_list:
         list3 = '\n'.join(gene_symbol['mirdb'])
         namelist3 = 'mirdb'
-    if 'targetscan' in conf[1]['protein']:
+    if 'targetscan' in db_list:
         list4 = '\n'.join(gene_symbol['targetscan'])
         namelist4 = 'targetsacn'
-    if 'tarbase' in conf[1]['protein']:
+    if 'tarbase' in db_list:
         list5 = '\n'.join(gene_symbol['tarbase'])
         namelist5 = 'tarbase'
     proxy = str(conf[0]['proxy'])
@@ -1439,6 +1441,11 @@ def venn(conf, gene, gene_symbol):
     resp.encoding = 'utf-8'
     obj = re.compile(r"href='(?P<path>.*?)' d")
     res = obj.findall(resp.text)
+    name = conf[2]['folder'] + '/' + gene + "/" + 'Venn' + '/' + 'Page-' + gene + '.html'
+    if resp.text:
+        with open(name, "wb") as f:
+            f.write(resp.content)
+            f.close()
     try:
         zxy = res[1]
     except BaseException as e:
@@ -1449,6 +1456,10 @@ def venn(conf, gene, gene_symbol):
         resp.encoding = 'utf-8'
         obj = re.compile(r"href='(?P<path>.*?)' d")
         res = obj.findall(resp.text)
+        if resp.text:
+            with open(name, "wb") as f:
+                f.write(resp.content)
+                f.close()
         print(e)
     else:
         pass
@@ -1458,8 +1469,8 @@ def venn(conf, gene, gene_symbol):
     svg.encoding = 'utf-8'
     table = requests.get(txt, headers=header)
     table.encoding = 'utf-8'
-    svg_name = conf[2]['folder'] + '/' + gene + "/" + 'Venn-' + gene + '.svg'
-    table_name = conf[2]['folder'] + '/' + gene + "/" + 'Table-' + gene + '.txt'
+    svg_name = conf[2]['folder'] + '/' + gene + "/" + 'Venn' + "/" + 'Venn-' + gene + '.svg'
+    table_name = conf[2]['folder'] + '/' + gene + "/" + 'Venn' + "/" + 'Table-' + gene + '.txt'
     with open(svg_name, 'wb') as f:
         f.write(svg.content)
         f.close()
@@ -1491,31 +1502,37 @@ def route(conf, mix, a):
     for gene in lst:
         print('开始' + gene + '靶基因筛查')
         gene_symbol = {}
+        db_list = []
         os.mkdir(conf[2]["folder"] + '/' + gene)
         if 'mirwalk' in conf[1]['protein']:
             mirwalk_gene_symbol = mirwalk_query(conf, gene, target)
             if mirwalk_gene_symbol:
                 gene_symbol['mirwalk'] = mirwalk_gene_symbol
+                db_list.append('mirwalk')
             time.sleep(gap)
         if 'mirdb' in conf[1]['protein']:
             mirdb_gene_symbol = mirdb_query(conf, gene)
             if mirdb_gene_symbol:
                 gene_symbol['mirdb'] = mirdb_gene_symbol
+                db_list.append('mirdb')
             time.sleep(gap)
         if 'targetscan' in conf[1]['protein']:
             targetscan_gene_symbol = targetscan_query(conf, gene)
             if targetscan_gene_symbol:
                 gene_symbol['targetscan'] = targetscan_gene_symbol
+                db_list.append('targetscan')
             time.sleep(gap)
         if 'mirdip' in conf[1]['protein']:
             mirdip_gene_symbol = mirdip_query(conf, gene)
             if mirdip_gene_symbol:
                 gene_symbol['mirdip'] = mirdip_gene_symbol
+                db_list.append('mirdip')
             time.sleep(gap)
         if 'tarbase' in conf[1]['protein']:
             tarbase_gene_symbol = tarbase_query(conf, gene)
             if tarbase_gene_symbol:
                 gene_symbol['tarbase'] = tarbase_gene_symbol
+                db_list.append('tarbase')
             time.sleep(gap)
         intersection = openpyxl.Workbook()
         intersection.save(conf[2]["folder"] + '/' + gene + '/' + 'intersection' + '.xlsx')
@@ -1535,7 +1552,7 @@ def route(conf, mix, a):
         print('靶蛋白文件输出完成')
         if conf[0]['venn'] == '1' and len(conf[1]['protein']) >= 2:
             print('韦恩图生成中')
-            venn(conf, gene, gene_symbol)
+            venn(conf, gene, gene_symbol, db_list)
             print('韦恩图生成完毕')
 
 
@@ -1543,6 +1560,11 @@ def route(conf, mix, a):
 def main():
     filename = 'config.ini'
     # 获取配置文件
+    sst = os.path.exists('./output/')
+    if sst:
+        pass
+    else:
+        os.mkdir('./output')
     print('正在读取配置文件')
     conf = ini()
     wyb = os.path.exists('databsae/hsa_lists.csv')
@@ -1619,6 +1641,7 @@ def main():
     folder = conf[2]['folder']
     name = conf[2]["name"]
     os.mkdir(folder)
+    log(folder)
     path = './' + folder
     if conf[0]['log'] == '1':
         make_print_to_file(path)  # 日志记录
@@ -1704,6 +1727,7 @@ def main():
                 zip.close()
         time.sleep(2)
         print('保存完毕')
+        os.remove(folder + '/bug.log')
 
 
 def compressFolder(folderPath, compressPathName):
@@ -1740,6 +1764,21 @@ def make_print_to_file(path):
     print(fileName.center(60, '*'))
 
 
+def log(folder):
+    # 设置日志格式
+    LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+    # 设置日期格式
+    DATE_FORMAT = "%m/%d/%Y %H:%M:%S %p"
+    logging.basicConfig(level=logging.DEBUG, filename=folder + '/bug.log', filemode='a', format=LOG_FORMAT,
+                        datefmt=DATE_FORMAT)
+    logging.info('This is a info')
+    logging.debug('This is a debug')
+    logging.warning('This is a warning' + ' ' + time.strftime('%y-%m-%d %H:%M:%S') + ' ' + traceback.format_exc())
+    logging.error('This is a error', exc_info=True, stack_info=True, extra={'user': 'Tom', 'ip': '47.98.53.222'})
+    logging.critical('This is a critical')
+    logging.log(logging.CRITICAL, "This is a critical")
+
+
 def information():
     print("欢迎使用gene weaver")
     print("查看目前功能及注意事项请移步readme.md")
@@ -1749,6 +1788,7 @@ def information():
 
 
 if __name__ == '__main__':
+    colorama.init(autoreset=True)
     t1 = time.time()
     information()
     main()
