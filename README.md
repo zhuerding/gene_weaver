@@ -28,10 +28,11 @@
   用OCR、计算机爬虫等技术可以实现对StarBase、Ualcan、 mirWalk、mirDIP、miRDB、TargetScan
 、TarBase、PubMed、中国知网等多个数据库进行检索，获取相应靶基因信息、差异表达、
 生存曲线等信息，从而得出可靠的miRNA -> gene symbol通路。同时程序
-还可以生成表格、韦恩图等多种输出形式，亦可在公共服务器上运行。  
+还可以生成表格、韦恩图等多种输出形式，亦可在公共服务器上运行。
   
 
   **适用人群：** 有大批量miRNA检索需求的生信科研人员  
+  **项目更新地址：**[https://github.com/zhuerding/gene_weaver](https://github.com/zhuerding/gene_weaver)
 ## <span id='index2'>二、文件结构</span>  
 - `./gene_waver.exe`  主程序
 - `./database/hsa-lists.csv`  miRNA ID互译表
