@@ -1797,6 +1797,6 @@ if __name__ == '__main__':
     t2 = time.time()
     time = t2 - t1
     print('共运行' + f'\033[1;36m{time}\033[0m' + '秒，超过了全国99.99%的用户')
-    print('本程序版本' + '\033[3;31mV1.5.0001\033[0m')
+    print('本程序版本' + '\033[3;31mV1.5.0002\033[0m')
     print('您可以在' + '\033[3;31mhttps://github.com/zhuerding/gene_weaver\033[0m' + '获取本程序最新的版本')
     input('欢迎使用，按任意键退出程序')
