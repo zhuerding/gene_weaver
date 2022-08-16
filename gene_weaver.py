@@ -55,16 +55,26 @@ def analysis(a, obj5):
     print(a)
     lst = []
     if len(a) == 1:
-        with open(a[0], 'r', encoding="utf-8") as f:
-            next(f)  # 跳过第一行即可
-            for line in f:
-                line = line.strip('\n').split('\t')
-                res = obj5.search(line[0])
-                if res is None:
-                    pass
-                else:
-                    lst.append("hsa-miR-" + res.group("name"))
-                    print(res.group("name"))
+        if '.tsv' in a[0]:
+            with open(a[0], 'r', encoding="utf-8") as f:
+                next(f)  # 跳过第一行即可
+                for line in f:
+                    line = line.strip('\n').split('\t')
+                    res = obj5.search(line[0])
+                    if res is None:
+                        pass
+                    else:
+                        lst.append("hsa-miR-" + res.group("name"))
+                        print(res.group("name"))
+        if '.txt' in a[0]:
+            f = open(a[0], mode="r", encoding="utf-8")
+            gene_lst = f.readlines()
+            f.close()
+            obj0 = re.compile(r"'(?P<gene_name>.*?)'")
+            genes = obj0.finditer(str(gene_lst))
+            for gene in genes:
+                gene_name = gene.group("gene_name").strip(r"\n")
+                lst.append(gene_name)
         source = lst
     else:
         for path in a:
