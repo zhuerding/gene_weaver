@@ -123,7 +123,7 @@
         'UVM': ['UVM', 'Uveal Melanoma', '葡萄膜黑色素瘤']
 ***以上为关键词云***  
   我们在词云匹配使用了fuzzywuzzy模块，通过与关键词的匹配度计算degree。  
->  如果在进行关键词云匹配过程中程序终端有可能是因为米娜桑的计算机没有安装Visual C++ Build Tools for Visual Studio 2015 with Update 3。  
+>  如果在进行关键词云匹配过程中程序终端报错有可能是因为米娜桑的计算机没有安装Visual C++ Build Tools for Visual Studio 2015 with Update 3。  
   <https://my.visualstudio.com/Downloads?q=Visual%20Studio%202015%20update%203&pgroup=>  
   请下载**DVD**版本，如果米娜桑的电脑储存不足，可以在下载后仅安装win10/win7 SDK.
 
@@ -135,27 +135,27 @@
   程序会自动对miRNA进行分类，根据米娜桑在配置文件中设置的`model`值进行下一步搜索。
 - ### <span id='title6'>mirWalk查询</span>  
   ***此步不需要操作，仅说明原理***  
->  miRWalk（ <http://mirwalk.umm.uni-heidelberg.de/> ）是一个综合性的miRNA靶基因数据库，收录了Human、Mouse、Rat、Dog、cow等多个物种的miRNA靶基因信息，不仅仅记录了基因全长序列上的miRNA结合位点，也会将其与已有的12个miRNA靶标预测程序（DIANA-microTv4.0 , DIANA-microT-CDS , miRanda-rel2010 , mirBridge , miRDB4.0 , miRmap , miRNAMap, doRiNA i.e.,PicTar2, PITA RNA22v2 , RNAhybrid2.1 and Targetscan6.2 ）的预测结合信息集合进行结合关联。数据库一直在更新收录新的资料，第一版是在2011年发布，之后在2015年发布V2 版本，并登上了Nature methods杂志，目前更新到V3 版本。
+>  [miRWalk](http://mirwalk.umm.uni-heidelberg.de/)是一个综合性的miRNA靶基因数据库，收录了Human、Mouse、Rat、Dog、cow等多个物种的miRNA靶基因信息，不仅仅记录了基因全长序列上的miRNA结合位点，也会将其与已有的12个miRNA靶标预测程序（DIANA-microTv4.0 , DIANA-microT-CDS , miRanda-rel2010 , mirBridge , miRDB4.0 , miRmap , miRNAMap, doRiNA i.e.,PicTar2, PITA RNA22v2 , RNAhybrid2.1 and Targetscan6.2 ）的预测结合信息集合进行结合关联。数据库一直在更新收录新的资料，第一版是在2011年发布，之后在2015年发布V2 版本，并登上了Nature methods杂志，目前更新到V3 版本。
 
   根据米娜桑填写的`model`值，程序会查询mirWalk数据库，程序通过pandas模块对下载到的csv文件进行解析，获取靶蛋白`bindingp` = 1的靶蛋白。  
 - ### <span id='title5'>miRDB查询</span>  
   ***此步不需要操作，仅说明原理***  
->  miRDB（http://mirdb.org）是用于miRNA目标预测和功能注释的在线数据库。miRDB中的所有目标都由生物信息学工具MirTarget预测，该工具是通过分析来自高通量测序实验的数千个miRNA-目标相互作用而开发的。与miRNA结合和靶点下调相关的共同特征已被确定并用于通过机器学习方法预测miRNA靶点。
+>  [miRDB](http://mirdb.org)是用于miRNA目标预测和功能注释的在线数据库。miRDB中的所有目标都由生物信息学工具MirTarget预测，该工具是通过分析来自高通量测序实验的数千个miRNA-目标相互作用而开发的。与miRNA结合和靶点下调相关的共同特征已被确定并用于通过机器学习方法预测miRNA靶点。
 
   根据米娜桑填写的`model`值，程序会查询miRDB数据库，程序通过xpath模块对页面进行解析，获取靶蛋白`Target Score` > 80的靶蛋白。
 - ### <span id='title6'>TargetScan查询</span>  
   ***此步不需要操作，仅说明原理***  
->  TargetScan （http://www.targetscan.org/vert_71/） 是一个miRNA 靶基因预测的网站, 包括了 人， 小鼠，果蝇 ， 线虫， 斑马鱼 共5个物种的miRNA 靶基因结果。
+>  [TargetScan](http://www.targetscan.org/vert_71/) 是一个miRNA 靶基因预测的网站, 包括了 人， 小鼠，果蝇 ， 线虫， 斑马鱼 共5个物种的miRNA 靶基因结果。
 
   根据米娜桑填写的`model`值，程序会查询TargetScan数据库，程序通过panads模块对下载到的xlsx文件进行解析，获取靶蛋白`Total context++ score` < -0.5 的靶蛋白。  
 - ### <span id='title7'>mirDIP查询</span>  
   ***此步不需要操作，仅说明原理***  
->  mirDIP（<http://ophid.utoronto.ca/mirDIP/index.jsp>）集成了30个来源数据库中human相关的靶基因信息，是最全面的人类miRNA靶基因数据库。
+>  [mirDIP](http://ophid.utoronto.ca/mirDIP/index.jsp)集成了30个来源数据库中human相关的靶基因信息，是最全面的人类miRNA靶基因数据库。
 
   根据米娜桑填写的`model`值，程序会查询mirDIP数据库，程序通过对下载到的tsv文件进行解析，获取靶蛋白`very high`的靶蛋白。
 - ### <span id='title8'>Tarbase查询</span>  
   ***此步不需要操作，仅说明原理***  
->  TarBase（<https://dianalab.e-ce.uth.gr/html/diana/web/index.php?r=tarbasev8>）收录各种实验验证过的miR-Target数据（只要是人和小鼠的靶基因信息），TarBase将实验证据分为low和high两类，low代表的是传统的实验手段，可靠性相对于高通量测序的分析结果更高一点，我们可以筛选low方法支持的miRNA靶基因信息，得到高质量的miRNA候选靶基因集。TarBase只提供在线检索，可以输入miRNA名称和/或基因名称，miRNA名称为miRBase数据库格式,基因名称支持gene symbol(基因名)和ensembl gene ID。
+>  [TarBase](https://dianalab.e-ce.uth.gr/html/diana/web/index.php?r=tarbasev8)收录各种实验验证过的miR-Target数据（只要是人和小鼠的靶基因信息），TarBase将实验证据分为low和high两类，low代表的是传统的实验手段，可靠性相对于高通量测序的分析结果更高一点，我们可以筛选low方法支持的miRNA靶基因信息，得到高质量的miRNA候选靶基因集。TarBase只提供在线检索，可以输入miRNA名称和/或基因名称，miRNA名称为miRBase数据库格式,基因名称支持gene symbol(基因名)和ensembl gene ID。
 
   根据米娜桑填写的`model`值，程序会查询Tarbase数据库，程序通过xpath模块对页面进行解析，获取靶蛋白`Score` > 5 的靶蛋白。  
 - ### <span id='title9'>韦恩图生成</span>  
