@@ -96,6 +96,7 @@ def analysis(a, obj5):
 
 # ualcan数据库差异表达查询
 def km_expression(a, obj4, output, conf):
+    import re
     name = conf[2]["name"]
     folder = conf[2]["folder"]
     cc = str(conf[1]['cc'])
@@ -161,71 +162,34 @@ def km_expression(a, obj4, output, conf):
                         html = requests.get(url=url1, headers=header)
                         print(e)
                 html.encoding = 'utf-8'
-                res = obj4.finditer(html.text)
-                for re in res:
-                    value_plus = re.group('value')
-                    if value_plus is None:
-                        print("  未查询到该miRNA前体信息")
-                        print('  恭喜这个miRNA寄了')
-                    else:
-                        index = a[0].get(gene)
-                        value_plus1 = value_plus + '（前体）'
-                        sheet.cell(index, 4, value_plus1)
-                        output.save(folder + '/' + name + '.xlsx')
-                    print("  查询到该miRNA前体信息")
-                    print("  ", miRNA)
-                    print("  ", value_plus)
-            else:
-                print("  未查询到该miRNA前体信息")
-                miRNA_5p = gene + '-5p'
-                url1 = f"http://ualcan.path.uab.edu/cgi-bin/TCGA-miR-Result.pl?genenam={miRNA_5p}&ctype={ctype}"
-                try:
-                    if proxy:
-                        html_5p = requests.get(url=url1, headers=header, proxies=proxies, timeout=10)
-                    else:
-                        html_5p = requests.get(url=url1, headers=header, timeout=10)
-                except BaseException as e:
-                    if proxy:
-                        html_5p = requests.get(url=url1, headers=header, proxies=proxies)
-                        print(e)
-                    else:
-                        html_5p = requests.get(url=url1, headers=header)
-                        print(e)
-                html_5p.encoding = 'utf-8'
-                res_5p = obj4.finditer(html_5p.text)
-                miRNA_3p = gene + '-3p'
-                url2 = f"http://ualcan.path.uab.edu/cgi-bin/TCGA-miR-Result.pl?genenam={miRNA_3p}&ctype={ctype}"
-                try:
-                    if proxy:
-                        html_3p = requests.get(url=url2, headers=header, proxies=proxies, timeout=10)
-                    else:
-                        html_3p = requests.get(url=url2, headers=header, timeout=10)
-                except BaseException as e:
-                    if proxy:
-                        html_3p = requests.get(url=url2, headers=header, proxies=proxies)
-                        print(e)
-                    else:
-                        html_3p = requests.get(url=url2, headers=header)
-                        print(e)
-                html_3p.encoding = 'utf-8'
-                res_3p = obj4.finditer(html_3p.text)
-                p = {}
-                for re_5p in res_5p:
-                    value_5p = re_5p.group('value')
-                    p["p5_plus"] = value_5p
-                for re_3p in res_3p:
-                    value_3p = re_3p.group('value')
-                    p["p3_plus"] = value_3p
-                if not p:
-                    print('  未查询到该miRNA成熟体信息')
-                    print('  没救了，等死吧')
+                obj = re.compile(r'were not identified')
+                sur = obj.search(html.text)
+                if sur is None:
+                    res = obj4.finditer(html.text)
+                    for req in res:
+                        value_plus = req.group('value')
+                        if value_plus is None or value_plus == 'N/A':
+                            index = a[0].get(gene)
+                            value_plus1 = 'N/A'
+                            sheet.cell(index, 4, value_plus1)
+                            output.save(folder + '/' + name + '.xlsx')
+                            print("  未查询到该miRNA前体信息")
+                            print('  恭喜这个miRNA寄了')
+                        else:
+                            index = a[0].get(gene)
+                            value_plus1 = value_plus + '（前体）'
+                            sheet.cell(index, 4, value_plus1)
+                            output.save(folder + '/' + name + '.xlsx')
+                        print("  查询到该miRNA前体信息")
+                        print("  ", miRNA)
+                        print("  ", value_plus)
                 else:
+                    print("  未查询到该miRNA前体信息")
+                    print('  恭喜这个miRNA寄了')
                     index = a[0].get(gene)
-                    p_value = p["p5_plus"] + '(5p)' + '\n' + p["p3_plus"] + '(3p)'
-                    sheet.cell(index, 4, p_value)
+                    value_plus1 = 'N/A'
+                    sheet.cell(index, 4, value_plus1)
                     output.save(folder + '/' + name + '.xlsx')
-                    print("  查询到该miRNA成熟体信息")
-                    print("  ", p)
         else:
             res = obj4.finditer(resp.text)
             for re in res:
@@ -345,72 +309,10 @@ def km_sur_query(a, output, conf):
             else:
                 print("  未查询到该miRNA前体信息")
                 print("  这个miRNA寄了")
-        else:
-            print("  未查询到该miRNA成熟体信息")
-            miRNA_5p = gene + '-5p'
-            url_5p = f'http://ualcan.path.uab.edu/images/survival-TCGA/miRNA/{cc}-miR-KMinput/Exp/{miRNA_5p}-KM-Exp.svg'
-            try:
-                if proxy:
-                    html_5p = requests.get(url=url_5p, headers=header, proxies=proxies, timeout=10)
-                else:
-                    html_5p = requests.get(url=url_5p, headers=header, timeout=10)
-            except BaseException as e:
-                if proxy:
-                    html_5p = requests.get(url=url_5p, headers=header, proxies=proxies)
-                    print(e)
-                else:
-                    html_5p = requests.get(url=url_5p, headers=header)
-            content_5p = html_5p.content
-            res = obj.search(str(content_5p))
-            p = {}
-            if res is None:
-                with open('f.svg', 'wb') as f:
-                    f.write(content_5p)
-                cairosvg.svg2png(url='f.svg', write_to='f.png')
-                p5_value = pytesseract.image_to_string(Image.open('f.png'), lang='chi_sim+eng')
-                os.remove('f.svg')
-                os.remove('f.png')
-                res_5p = p5_value.replace(' ', '')
-                for re_5p in res_5p:
-                    value_5p = re_5p.group('value')
-                    p["value_5p"] = value_5p
-            miRNA_3p = gene + '-3p'
-            url_3p = f'http://ualcan.path.uab.edu/images/survival-TCGA/miRNA/{cc}-miR-KMinput/Exp/{miRNA_3p}-KM-Exp.svg'
-            try:
-                if proxy:
-                    html_3p = requests.get(url=url_3p, headers=header, proxies=proxies, timeout=10)
-                else:
-                    html_3p = requests.get(url=url_3p, headers=header, timeout=10)
-            except BaseException as e:
-                if proxy:
-                    html_3p = requests.get(url=url_3p, headers=header, proxies=proxies)
-                    print(e)
-                else:
-                    html_3p = requests.get(url=url_3p, headers=header)
-            content_3p = html_3p.content
-            res = obj.search(str(content_3p))
-            if res is None:
-                with open('f.svg', 'wb') as f:
-                    f.write(content_3p)
-                    f.close()
-                cairosvg.svg2png(url='f.svg', write_to='f.png')
-                p3_value = pytesseract.image_to_string(Image.open('f.png'), lang='chi_sim+eng')
-                os.remove('f.svg')
-                os.remove('f.png')
-                res_3p = p3_value.replace(' ', '')
-                for re_3p in res_3p:
-                    value_3p = re_3p.group('value')
-                    p["value_3p"] = value_3p
-            if not p:
-                print('  未查询到该miRNA成熟体信息')
-                print('  没救了，等死吧')
-            else:
                 index = a[0].get(gene_index[0])
-                p_value = p["p5_plus"] + '(5p)' + '\n' + p["p3_plus"] + '(3p)'
-                sheet.cell(index, 5, p_value)
+                value_plus = 'N/A'
+                sheet.cell(index, 5, value_plus)
                 output.save(folder + '/' + name + '.xlsx')
-                print("查询到该miRNA前体信息")
-                print(p_value)
 
 
 # starbase数据库差异表达查询函数
@@ -722,13 +624,13 @@ def pubmed(a, output, conf, mix):
                 mix[gene]['index'] = a[0].get(gene)
                 sheet.cell(index, 7, 'Very High')
                 output.save(folder + '/' + name + '.xlsx')
-            if 30 <= degree['max'] <= 80 or degree['average'] >= 40:
+            if 60 <= degree['max'] <= 80 or degree['average'] >= 30:
                 print('识别完毕，可疑度为', '\033[1;32mHigh\033[0m', '，建议手动确认后进行靶基因筛查')
                 mix[gene]['pubmed_degree'] = 2
                 mix[gene]['index'] = a[0].get(gene)
                 sheet.cell(index, 7, 'High')
                 output.save(folder + '/' + name + '.xlsx')
-            if degree['max'] <= 30:
+            if degree['max'] <= 60:
                 print('识别完毕，可疑度为', '\033[1;33mLow\033[0m', '，建议手动确认后进行靶基因筛查')
                 mix[gene]['pubmed_degree'] = 3
                 mix[gene]['index'] = a[0].get(gene)
@@ -763,9 +665,9 @@ def ini():
             with open(filename, 'w') as configfile:
                 inifile.write(configfile)
                 configfile.close()
-        save = inifile.get("base", "save")
         log = inifile.get("base", "log")
         zip = inifile.get('base', 'zip')
+        test = inifile.get('base', 'test')
         proxy = inifile.get("base", "proxy")
         if proxy:
             try:
@@ -795,7 +697,6 @@ def ini():
                 sys.exit()
             else:
                 pass
-        venn = inifile.get("base", "venn")
         e_name = inifile.get("base", "e_name")
         exp_list = ["?", "/", ":", '"', "|", "*", "<", ">", r"'\'"]
         for exp in exp_list:
@@ -816,9 +717,7 @@ def ini():
                 gse.append(lst)
         base["gap"] = gap
         base["log"] = log
-        base["save"] = save
         base["proxy"] = proxy
-        base["venn"] = venn
         base["gse"] = gse
         base["zip"] = zip
         base["e_name"] = e_name
@@ -829,8 +728,9 @@ def ini():
         db = []
         paper = []
         protein = []
-        fuzzy = []
         input_db_list = inifile.get('query', 'db')
+        save = inifile.get("query", "save")
+        venn = inifile.get("query", "venn")
         db_lists = obj.finditer(input_db_list)
         for db_list in db_lists:
             db_lst = db_list.group('data')
@@ -839,23 +739,15 @@ def ini():
             else:
                 db.append(db_lst)
         if 'ualcan' in db:
-            try:
-                requests.get("http://ualcan.path.uab.edu/analysis-mir.html", timeout=8)
-            except BaseException as e:
-                print('')
-                print('在测试中发现您的网络不适合请求ualcan数据库')
-                print(e)
-                down = input('请问是否需要继续查询？（y为继续，n为不需要，v为关闭程序）')
-                if down == 'y' or down == 'Y':
-                    pass
-                if down == 'n' or down == 'N':
-                    db = ['starbase']
-                if down == 'v' or down == 'V':
+            if test == '1':
+                try:
+                    requests.get("http://ualcan.path.uab.edu/analysis-mir.html", timeout=8)
+                except BaseException as e:
                     print('')
-                    print('您可以在关闭程序后打开VPN或者在配置文件中加入代理服务器地址')
-                    print('\033[1;33m 3\033[0m' + '秒后自动关闭程序')
-                    time.sleep(3)
-                    sys.exit()
+                    print('在测试中发现您的网络不适合请求ualcan数据库（也有可能ualcan噶了或服务器检修）')
+                    print('已为您取消查询该数据库')
+                    print(e)
+                    db.remove('ualcan')
         input_paper_list = inifile.get('query', 'paper')
         paper_lists = obj.finditer(input_paper_list)
         for paper_list in paper_lists:
@@ -872,8 +764,60 @@ def ini():
                 pass
             else:
                 protein.append(protein_lst)
+        if 'mirdb' in protein:
+            if test == '1':
+                try:
+                    requests.get("http://mirdb.org/", timeout=10)
+                except BaseException as e:
+                    print('')
+                    print('在测试中发现您的网络不适合请求mirdb数据库（也有可能mirdb噶了或服务器检修）')
+                    print('已为您取消查询该数据库')
+                    print(e)
+                    protein.remove('mirdb')
+        if 'mirdip' in protein:
+            if test == '1':
+                try:
+                    requests.get("https://ophid.utoronto.ca/mirDIP/", timeout=10)
+                except BaseException as e:
+                    print('')
+                    print('在测试中发现您的网络不适合请求mirdip数据库（也有可能mirdip噶了或服务器检修）')
+                    print('已为您取消查询该数据库')
+                    print(e)
+                    protein.remove('mirdip')
+        if 'mirwalk' in protein:
+            if test == '1':
+                try:
+                    requests.get("http://mirwalk.umm.uni-heidelberg.de/", timeout=10)
+                except BaseException as e:
+                    print('')
+                    print('在测试中发现您的网络不适合请求mirwalk数据库（也有可能mirwalk噶了或服务器检修）')
+                    print('已为您取消查询该数据库')
+                    print(e)
+                    protein.remove('mirwalk')
+        if 'targetscan' in protein:
+            if test == '1':
+                try:
+                    requests.get("https://www.targetscan.org/vert_72/", timeout=10)
+                except BaseException as e:
+                    print('')
+                    print('在测试中发现您的网络不适合请求targetscan数据库（也有可能targetscan噶了或服务器检修）')
+                    print('已为您取消查询该数据库')
+                    print(e)
+                    protein.remove('targetscan')
+        if 'tarbase' in protein:
+            if test == '1':
+                try:
+                    requests.get("https://dianalab.e-ce.uth.gr/html/diana/web/index.php?r=tarbasev8", timeout=10)
+                except BaseException as e:
+                    print('')
+                    print('在测试中发现您的网络不适合请求tarbase数据库（也有可能tarbase噶了或服务器检修）')
+                    print('已为您取消查询该数据库')
+                    print(e)
+                    protein.remove('tarbase')
         query['db'] = db
         query['paper'] = paper
+        query['save'] = save
+        query['venn'] = venn
         query['cc'] = cc
         query['protein'] = protein
         query['model'] = model
@@ -909,11 +853,12 @@ def ini():
         print('配置文件损毁或不存在，正在生成中')
         f = open(filename, 'w', encoding='utf-8')
         config = "[base]\n# GSE数据集相对或者绝对地址（格式为在[]中加入,'XXX'即可）(无限制数目)（选填）\ngse = ['','','']\n" \
-                 "# 查询间隔时间，建议大于0.5s，不需要添加单位（单位为s）\ngap = 0.5\n# 在靶蛋白搜索时是否保存数据库导出的csv文件，是为1，否为0" \
-                 "\nsave = 0\n# 是否生成日志文件，是为1，否为0\nlog = 1\n# 代理服务器ip地址，例如192.168.0.1:80（可不填）\n" \
-                 "proxy =\n# 是否生成靶蛋白韦恩图（查询的数据库数需>=2），是为1，否为0\nvenn = 1\n" \
+                 "# 查询间隔时间，建议大于0.5s，不需要添加单位（单位为s）\ngap = 0.5\n" \
+                 "\n# 是否生成日志文件，是为1，否为0\nlog = 1\n# 代理服务器ip地址，例如192.168.0.1:80（可不填）\n" \
+                 "proxy =\n" \
                  "# 是否将输出文件打包成压缩包（方便课题组在服务器上运行后下载）（选填），是为1，否为0\nzip = 0\n" \
-                 '# 电子签名，方便课题组在服务器或公用电脑上运行时标识身份（选填）(不能出现*:<?/">|\)\ne_name =\n\n' \
+                 r'# 电子签名，方便课题组在服务器或公用电脑上运行时标识身份（选填）(不能出现*:<?/">|\)\ne_name =\n' \
+                 '# 测试网站是否可以使用，是为1，否为0（启用时加载配置文件需要10s左右）\ntest = 0\n\n' \
                  "[query]\n# 需要miRNA查询的数据库（格式为在[]中加入,'XXX'即可）\n# 支持数据库：starbase(https://starbase.sysu.edu.cn/)、" \
                  "ualcan（http://ualcan.path.uab.edu/）\n# 因为各方面原因，暂时将starbase数据库作为主数据库，请勿删去’starbase‘\n" \
                  "db = ['starbase','ualcan']\n# 需要查询的癌种（请全部使用大写）（目前仅支持单一癌种查询）" \
@@ -926,7 +871,8 @@ def ini():
                  "\n# 支持数据库：TarBase（https://dianalab.e-ce.uth.gr/html/diana/web/index.php?r=tarbasev8）" \
                  "\nprotein = ['mirdb','mirdip','mirwalk','targetscan','tarbase']" \
                  "\n# 文献重合度检索，在miRNA文献重合度为某等级以上进行靶基因检索\n# 可写参数：4（None）、3（low）、2（high）、1（very high）、0（all）" \
-                 "\n# 当不填写文献检索数据库且仍需筛查靶基因时，请使用参数0，其他情况不要使用\n# 文献重合度界定详情请阅读./readme.md文件\nmodel = 3"
+                 "\n# 当不填写文献检索数据库且仍需筛查靶基因时，请使用参数0，其他情况不要使用\n# 文献重合度界定详情请阅读./readme.md文件\nmodel = 3"\
+                 "\n# 是否生成靶蛋白韦恩图（查询的数据库数需>=2），是为1，否为0\nvenn = 1\n# 在靶蛋白搜索时是否保存数据库导出的csv文件，是为1，否为0\nsave = 1"
         f.write(config)
         f.close()
         print('')
@@ -968,6 +914,8 @@ def mirwalk_query(conf, gene, target):
             session.get(url, headers=header, timeout=20)
             html = requests.get(url, headers=header, timeout=20)
     except BaseException as e:
+        print('cookies失败，正在再次查询')
+        time.sleep(6)
         if proxy:
             session.get(url, headers=header, proxies=proxies)
             html = requests.get(url, headers=header, proxies=proxies)
@@ -989,11 +937,13 @@ def mirwalk_query(conf, gene, target):
             else:
                 resp = requests.get(url2, headers=header, cookies=cookie, timeout=20)
         except BaseException as e:
+            print('查询失败，正在再次查询')
+            time.sleep(6)
             if proxy:
-                resp = requests.get(url2, headers=header, cookies=cookie, proxies=proxies)
+                resp = requests.get(url2, headers=header, cookies=cookie, proxies=proxies, timeout=30)
                 print(e)
             else:
-                resp = requests.get(url2, headers=header, cookies=cookie)
+                resp = requests.get(url2, headers=header, cookies=cookie, timeout=30)
                 print(e)
         resp.encoding = 'utf-8'
         res = resp.content
@@ -1007,7 +957,7 @@ def mirwalk_query(conf, gene, target):
         for item in res:
             mirwalk_gene_symbol.append(item)
         mirwalk_gene_symbol = list(set(mirwalk_gene_symbol))
-        if conf[0]["save"] == '0':
+        if conf[1]["save"] == '0':
             os.remove(name)
         print(gene, " mirWalk查询完毕")
         print(mirwalk_gene_symbol)
@@ -1052,11 +1002,13 @@ def mirdb_query(conf, gene):
         else:
             resp = requests.post(url, headers=header, data=data, timeout=20)
     except BaseException as e:
+        print('查询失败，正在再次查询')
+        time.sleep(6)
         if proxy:
-            resp = requests.post(url=url, headers=header, proxies=proxies, data=data)
+            resp = requests.post(url=url, headers=header, proxies=proxies, data=data, timeout=20)
             print(e)
         else:
-            resp = requests.post(url, headers=header, data=data)
+            resp = requests.post(url, headers=header, data=data, timeout=20)
             print(e)
     resp.encoding = 'utf-8'
     obj = re.compile(r'no Human miRNA is predicted to target symbol')
@@ -1071,7 +1023,7 @@ def mirdb_query(conf, gene):
                 if int(sroce[0]) > 60:
                     mirdb_gene_symbol.append(name[0].strip(' '))
         name = conf[2]['folder'] + '/' + gene + "/" + "miRDB" + '.html'
-        if conf[0]["save"] == '1':
+        if conf[1]["save"] == '1':
             with open(name, 'wb') as f:
                 f.write(resp.content)
                 f.close()
@@ -1117,21 +1069,6 @@ def mirdip_query(conf, gene):
 
         # bidirectional
         def bidirectionalSearch(self, geneSymbols, microRNAs, minimumScore, sources, occurrances):
-
-            '''
-				String url_b = url + "/Http_B";
-
-				String parameters =
-						"genesymbol=" + geneSymbols +
-						"&" + "microrna=" + microRNAs +
-						"&" + "scoreClass=" + mapScore.get(minimumScore) +
-						"&" + "dbOccurrences=" + occurrances +
-						"&" + "sources=" + sources;
-
-				int responseCode = sendPost(url_b, parameters);
-				return responseCode;
-			'''
-
             self.sendPost(self.url + "/Http_B", geneSymbols, microRNAs, self.mapScore[minimumScore], sources,
                           occurrances)
             return
@@ -1209,6 +1146,8 @@ def mirdip_query(conf, gene):
         for gene_symbol in lst:
             mirdip_gene_symbol.append(gene_symbol)
         print(mirdip_gene_symbol)
+        if conf[1]["save"] == 0:
+            os.remove(name)
         return mirdip_gene_symbol
 
 
@@ -1241,11 +1180,13 @@ def targetscan_query(conf, gene):
         else:
             resp = requests.get(url, headers=header, timeout=20)
     except BaseException as e:
+        print('查询失败，正在再次查询')
+        time.sleep(6)
         if proxy:
-            resp = requests.get(url=url, headers=header, proxies=proxies)
+            resp = requests.get(url=url, headers=header, proxies=proxies, timeout=20)
             print(e)
         else:
-            resp = requests.get(url, headers=header)
+            resp = requests.get(url, headers=header, timeout=20)
             print(e)
     resp.encoding = 'utf-8'
     obj = re.compile(r'Not Found')
@@ -1260,7 +1201,7 @@ def targetscan_query(conf, gene):
         lst = df.loc[df['Total context++ score'] < -0.5, 'Target gene']
         for target in lst:
             targetscan_gene_symbol.append(target)
-        if conf[0]["save"] == '0':
+        if conf[1]["save"] == '0':
             os.remove(name)
         print(targetscan_gene_symbol)
         return targetscan_gene_symbol
@@ -1299,15 +1240,17 @@ def tarbase_query(conf, gene):
     }
     try:
         if proxy:
-            resp = requests.get(url=url, headers=header, proxies=proxies, timeout=20)
+            resp = requests.get(url=url, headers=header, proxies=proxies, timeout=30)
         else:
-            resp = requests.get(url, headers=header, timeout=20)
+            resp = requests.get(url, headers=header, timeout=30)
     except BaseException as e:
+        print('查询失败，正在再次查询')
+        time.sleep(6)
         if proxy:
-            resp = requests.get(url=url, headers=header, proxies=proxies)
+            resp = requests.get(url=url, headers=header, proxies=proxies, timeout=30)
             print(e)
         else:
-            resp = requests.get(url, headers=header)
+            resp = requests.get(url, headers=header, timeout=30)
             print(e)
     resp.encoding = 'utf-8'
     obj = re.compile(r'No Results found')
@@ -1364,7 +1307,7 @@ def tarbase_query(conf, gene):
             jzy += 1
             time.sleep(2)
         print(tarbase_gene_symbol)
-        if conf[0]["save"] == '0':
+        if conf[1]["save"] == '0':
             os.remove(conf[2]['folder'] + '/' + gene + "/" + "TarBase")
         return tarbase_gene_symbol
     else:
@@ -1552,7 +1495,7 @@ def route(conf, mix, a):
             num += 1
         print('')
         print('靶蛋白文件输出完成')
-        if conf[0]['venn'] == '1' and len(conf[1]['protein']) >= 2:
+        if conf[1]['venn'] == '1' and len(conf[1]['protein']) >= 2:
             print('')
             print('韦恩图生成中')
             venn(conf, gene, gene_symbol, db_list)
@@ -1784,6 +1727,7 @@ def log(folder):
 def information():
     print("欢迎使用", "\033[1;36mGene Weaver\033[0m")
     print("查看目前功能及注意事项请移步readme.md")
+    print('本程序版本' + '\033[3;31mV1.5.0002\033[0m')
     print('BUG反馈、学术交流、创意分析请联系\033[3;36mzhuerding@zhuerding.top\033[0m')
     print('\n')
     time.sleep(1)
@@ -1799,4 +1743,4 @@ if __name__ == '__main__':
     print('共运行' + f'\033[1;36m{time}\033[0m' + '秒，超过了全国99.99%的用户')
     print('本程序版本' + '\033[3;31mV1.5.0002\033[0m')
     print('您可以在' + '\033[3;31mhttps://github.com/zhuerding/gene_weaver\033[0m' + '获取本程序最新的版本')
-    input('欢迎使用，按任意键退出程序')
+    input('谢谢使用，按任意键退出程序')
