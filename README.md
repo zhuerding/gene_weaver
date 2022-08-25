@@ -33,7 +33,7 @@
 
   **适用人群：** 有大批量miRNA检索需求的生信科研人员  
   **项目更新地址：**[https://github.com/zhuerding/gene_weaver](https://github.com/zhuerding/gene_weaver)  
-  **更新日志：**[./update.log](./update.log)
+  **安装包下载：**[https://pan.baidu.com/s/1vuHv1Jge21XpvRkUpbk4dw?pwd=5pbl](https://pan.baidu.com/s/1vuHv1Jge21XpvRkUpbk4dw?pwd=5pbl)
 ## <span id='index2'>二、文件结构</span>  
 - `./gene_waver.exe`  主程序
 - `./database/hsa-lists.csv`  miRNA ID互译表
