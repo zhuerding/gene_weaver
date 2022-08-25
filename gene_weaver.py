@@ -162,7 +162,7 @@ def km_expression(a, obj4, output, conf):
                         html = requests.get(url=url1, headers=header)
                         print(e)
                 html.encoding = 'utf-8'
-                obj = re.compile(r'were not identified')
+                obj = re.compile(r'No information available')
                 sur = obj.search(html.text)
                 if sur is None:
                     res = obj4.finditer(html.text)
@@ -174,18 +174,16 @@ def km_expression(a, obj4, output, conf):
                             sheet.cell(index, 4, value_plus1)
                             output.save(folder + '/' + name + '.xlsx')
                             print("  未查询到该miRNA前体信息")
-                            print('  恭喜这个miRNA寄了')
                         else:
                             index = a[0].get(gene)
                             value_plus1 = value_plus + '（前体）'
                             sheet.cell(index, 4, value_plus1)
                             output.save(folder + '/' + name + '.xlsx')
-                        print("  查询到该miRNA前体信息")
-                        print("  ", miRNA)
-                        print("  ", value_plus)
+                            print("  查询到该miRNA前体信息")
+                            print("  ", miRNA)
+                            print("  ", value_plus)
                 else:
                     print("  未查询到该miRNA前体信息")
-                    print('  恭喜这个miRNA寄了')
                     index = a[0].get(gene)
                     value_plus1 = 'N/A'
                     sheet.cell(index, 4, value_plus1)
@@ -308,7 +306,6 @@ def km_sur_query(a, output, conf):
                     output.save(folder + '/' + name + '.xlsx')
             else:
                 print("  未查询到该miRNA前体信息")
-                print("  这个miRNA寄了")
                 index = a[0].get(gene_index[0])
                 value_plus = 'N/A'
                 sheet.cell(index, 5, value_plus)
@@ -964,7 +961,6 @@ def mirwalk_query(conf, gene, target):
         return mirwalk_gene_symbol
     else:
         print('这个网站没有这个miRNA的相关数据')
-        print('大抵是噶了')
         return mirwalk_gene_symbol
 
 
@@ -1031,7 +1027,6 @@ def mirdb_query(conf, gene):
         return mirdb_gene_symbol
     else:
         print('这个网站没有这个miRNA的相关数据')
-        print('大抵是噶了')
         return mirdb_gene_symbol
 
 
@@ -1131,7 +1126,6 @@ def mirdip_query(conf, gene):
     o.unidirectionalSearchOnMicroRNAs(microRNAs, minimumScore)
     if o.getResulsSize() == '0':
         print('这个网站没有这个miRNA的相关数据')
-        print('大抵是噶了')
         return mirdip_gene_symbol
     else:
         name = conf[2]['folder'] + '/' + gene + "/" + "mirDIP" + '.csv'
@@ -1198,16 +1192,20 @@ def targetscan_query(conf, gene):
             f.write(resp.content)
             f.close()
         df = pd.read_excel(name, sheet_name=0, index_col=None, usecols=None)
-        lst = df.loc[df['Total context++ score'] < -0.5, 'Target gene']
-        for target in lst:
-            targetscan_gene_symbol.append(target)
+        try:
+            lst = df.loc[df['Total context++ score'] < -0.5, 'Target gene']
+            for target in lst:
+                targetscan_gene_symbol.append(target)
+        except BaseException as e:
+            e = e
+            print('这个网站没有这个miRNA的相关数据')
+            return targetscan_gene_symbol
         if conf[1]["save"] == '0':
             os.remove(name)
         print(targetscan_gene_symbol)
         return targetscan_gene_symbol
     else:
         print('这个网站没有这个miRNA的相关数据')
-        print('大抵是噶了')
         return targetscan_gene_symbol
 
 
@@ -1312,7 +1310,6 @@ def tarbase_query(conf, gene):
         return tarbase_gene_symbol
     else:
         print('这个网站没有这个miRNA的相关数据')
-        print('大抵是噶了')
         return tarbase_gene_symbol
 
 
@@ -1628,6 +1625,7 @@ def main():
             km_sur_query(a, output, conf)
         mix = {}
         if 'cnki' in conf[1]["paper"]:
+            print('')
             print("开始https://www.cnki.net/文献检索")
             mix = cnki(a, output, conf, mix)
         if 'pubmed' in conf[1]['paper']:
@@ -1659,7 +1657,7 @@ def main():
         df2 = df.dropna(axis=1)
         df2.to_excel(folder + '/' + name + '.xlsx', index=False)
         print(df2)
-        print("查询完毕" + "\n" + "乌拉")
+        print("查询完毕" + "\n")
         print("正在保存文件，请不要关闭程序")
         if conf[0]['zip'] == "1":
             month_rank_dir = folder
@@ -1728,9 +1726,26 @@ def information():
     print("欢迎使用", "\033[1;36mGene Weaver\033[0m")
     print("查看目前功能及注意事项请移步readme.md")
     print('本程序版本' + '\033[3;31mV1.5.0002\033[0m')
-    print('BUG反馈、学术交流、创意分析请联系\033[3;36mzhuerding@zhuerding.top\033[0m')
+    print('BUG反馈、创意分享请联系\033[3;36mzhuerding@zhuerding.top\033[0m')
     print('\n')
     time.sleep(1)
+
+
+# 更新函数
+def update():
+    import re
+    url = 'https://github.com/zhuerding/gene_weaver'
+    version = '1.5.0002'
+    resp = requests.get(url)
+    resp.encoding = 'utf-8'
+    obj = re.compile(r'>当前版本：V (.*?)  更新日志')
+    res = obj.findall(resp.text)
+    for re in res:
+        if re != version:
+            print('有版本更新')
+            print('更新日志详见：' + '\033[1;36mhttps://github.com/zhuerding/gene_weaver/blob/master/update.log\033[0m')
+            print('源代码地址：' + '\033[1;36mhttps://github.com/zhuerding/gene_weaver\033[0m')
+            print('安装包地址：' + '\033[1;36https://pan.baidu.com/s/1tc3yXbjyLs0K-LLsSKYs2A?pwd=pgsc\033[0m')
 
 
 if __name__ == '__main__':
@@ -1742,5 +1757,5 @@ if __name__ == '__main__':
     time = t2 - t1
     print('共运行' + f'\033[1;36m{time}\033[0m' + '秒，超过了全国99.99%的用户')
     print('本程序版本' + '\033[3;31mV1.5.0002\033[0m')
-    print('您可以在' + '\033[3;31mhttps://github.com/zhuerding/gene_weaver\033[0m' + '获取本程序最新的版本')
+    update()
     input('谢谢使用，按任意键退出程序')
