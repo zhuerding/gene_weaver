@@ -66,7 +66,7 @@
   
   2. GSE数据集解析分为两种模式  
   - 单集解析  
-  单集解析即只导入一个数据集，当导入一个数据集时，**默认**读取**第一列**的数据， 所以请保证单集导入时，第一列数据为米娜桑的miRNA名称（hsa-miR-***格式）。  
+  单集解析即只导入一个数据集，当导入一个数据集时，**默认** 读取**第一列**的数据，所以请保证单集导入时，第一列数据为米娜桑的miRNA名称（hsa-miR-***格式）。  
 
   - 多集解析  
   多集解析即导入多个数据集，只要任意两个数据集之间的miRNA存在交集，便会进行查询，此时**默认**读取**第七列**的数据（hsa-miR-***格式）（大多数GSE数据集均第七列为miRNA名称）。  
@@ -190,19 +190,17 @@
   GSE数据集相对或者绝对地址（格式为在[]中加入,'XXX'即可）**(无限制数目)（选填）**  
   - gse = ['','','']  
   查询间隔时间，建议大于0.5s，不需要添加单位 **（单位为s）**  
-  - gap = 0.5  
-  在靶蛋白搜索时是否保存数据库导出的csv文件，是为1，否为0  
-  - save = 1  
+  - gap = 0.5
   是否生成日志文件，是为1，否为0  
   - log = 1  
   代理服务器ip地址，例如192.168.0.1:80 **（选填）**  
-  - proxy =  
-  是否生成靶蛋白韦恩图（查询的数据库数**需>=2**），是为1，否为0  
-  - venn = 1  
+  - proxy =
   是否将输出文件打包成压缩包（方便课题组在服务器上运行后下载），是为1，否为0 **（选填）**  
   - zip = 0  
   电子签名，方便课题组在服务器或公用电脑上运行时标识身份 （选填）(不能出现*:\/?"<>|)  
   - e_name =  
+  测试网站是否可以使用，是为1，否为0（启用时加载配置文件需要10s左右）
+  - test = 0
 - [query]  
     需要miRNA查询的数据库（格式为在[]中加入,'XXX'即可）  
     支持数据库：[StarBase](https://starbase.sysu.edu.cn/)、[Ualcan](http://ualcan.path.uab.edu/analysis.html)  
@@ -216,14 +214,17 @@
   - paper = ['cnki','pubmed']  
   #需要靶蛋白的数据库（格式为在[]中加入,'XXX'即可）  
   支持数据库：[mirWalk](http://mirwalk.umm.uni-heidelberg.de/)、[TargetScan](https://www.targetscan.org/vert_72/)、[miRDB](http://mirdb.org/)、[mirDIP](https://ophid.utoronto.ca/mirDIP/)、[Tarbase](https://dianalab.e-ce.uth.gr/html/diana/web/index.php?r=tarbasev8)  
-  - protein = ['mirdb','mirdip','mirwalk','targetscan','tarbase']  
-  是否进行模糊查询，例如没有miRNA成熟体相关信息时使用其前体信息，是为1，否为0 **（暂时不支持）**  
-  - fuzzy = 1  
+  - protein = ['mirdb','mirdip','mirwalk','targetscan','tarbase']
   文献重合度检索，在miRNA文献重合度为某等级以上进行靶基因检索  
   可写参数：4（None）、3（low）、2（high）、1（very high）、0（all）  
   当不填写文献检索数据库且仍需筛查靶基因时，请使用参数0，其他情况不要使用  
   文献重合度界定详情请阅读（[4.中国知网&PubMed查询](#title4)）  
   - model = 3  
+  是否生成靶蛋白韦恩图（查询的数据库数**需>=2**），是为1，否为0  
+  - venn = 1  
+  在靶蛋白搜索时是否保存数据库导出的csv文件，是为1，否为0  
+  - save = 1  
+  
 ####    注意事项  
   1. 请不要删去`[base]`、`[query]`、`model = `等这类符号，此为分隔符或参数名。  
   2. 如果米娜桑不小心修改了不该修改的东西，而且不小心保存了，可以选择删除`config.ini`文件，然后运行主程序`gene_weaver.exe`，主程序在检测到配置文件消失后会自动重新生成一份船新的配置文件。  
@@ -252,7 +253,7 @@
 ## <span id='index7'>七、未来开发方向</span>  
 1. 兼容更多的数据库（已在日程的有：[miRcode](http://www.mircode.org/index.php)）
 2. 开发更加稳定的程序
-3. 某个人正在苦学信号通路，争取下次大更新能实装……  
+3. 某个人正在苦学KEGG和GO，争取下次大更新能实装……  
 ## <span id='index7'>八、声明与感谢</span>  
   程序作者：**zhuerding**（一个**胡桃厨**）![](picture/hutao.jpg)  
   本程序遵循**GNU（GNU General Public License）通用公共许可协议**，源代码及其衍生代码的开源且免费使用并可以引用、修改，但不允许修改后和衍生的代码做为闭源的商业软件发布和销售。希望其他基于本程序开发的同学们遵守该协议。  
