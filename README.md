@@ -1,6 +1,6 @@
 # Gene Weaver
 ## 基因编织
-#### 当前版本：***V 1.5.0002***  [更新日志](./update.log)  
+#### 当前版本：***V 1.6.0***  [更新日志](./update.log)  
 ######  （使用时尽量使用外置代理，以便更快的采集数据）
 
 ---
@@ -15,7 +15,9 @@
   [5.mirWalk查询](#title5)  
   [6.miRDB查询](#title6)  
   [7.TargetScan查询](#title7)  
-  [8.韦恩图交集](#title7)  
+  [8.mirDIP查询](#title8)  
+  [9.mirDIP查询](#title9)  
+  [10.韦恩图交集](#title10)  
 - 四、[导出文件](#index4)  
 - 五、[配置文件](#index5)
 - 六、[Bug相关](#index6)
@@ -78,7 +80,9 @@
 >Starbase 是通过对高通量的 CLIP-Seq 实验数据和降解组实验数据来搜寻到 micorRNA 靶标，为探讨 microRNA 的靶标提供了各式各样的可视化界面，该数据库容括了丰富的 miRNA-ncRNA、miRNA-mRNA、RBP-RNA 和 RNA-RNA 的数据。
 
   当成功导入数据集后，程序便会第一个查询StarBase数据库，因为Ualcan数据库相关miRNA信息较少，且服务器位于境外，故本程序不采用Ualacn数据库为筛选数据库。  
-  本程序在这一环节中会使用计算机爬虫技术，获取miRNA的差异表达和生存分析曲线的统计学p值，当两个p值**均小于等于**0.05，满足统计学意义时，便进入下一查询环节。
+  本程序在这一环节中会使用计算机爬虫技术，获取miRNA的差异表达和生存分析曲线的统计学p值，当两个p值**均小于等于**0.05，满足统计学意义时，便进入下一查询环节。  
+##### 1.6.0更新：  
+  在更新1.6.0版本后，该程序可以自动对StarBase上miRNA的箱式图、生存曲线自动分析，得出该miRNA的性质，并比较两图是否对应。不过，需要**注意**的是，为保证图像质量，程序识别中存在一定的模糊分析，即对比相关数据时会乘以**0.95**或**1.05**的系数，使得Normal组和Cancer组或Low组和High组的图像差异性更加显著。
 - ### <span id='title3'>Ualcan查询</span>  
   ***此步不需要操作，仅说明原理***  
 >UALCAN是一个易于使用的，交互式的门户网站，可以执行对TCGA基因表达数据的深入分析。UALCAN使用TCGA level 3 RNA-seq和31种癌症的临床数据。
@@ -120,7 +124,7 @@
         'THYM': ['THYM', 'Thymoma', '胸腺癌', '胸腺肿瘤'],
         'UCEC': ['UCEC', 'Uterine Corpus Endometrial Carcinoma', '子宫体子宫内膜癌'],
         'UCS': ['UCS', 'Uterine Carcinosarcoma', '子宫癌肉瘤'],
-        'UVM': ['UVM', 'Uveal Melanoma', '葡萄膜黑色素瘤']
+        'UVM': ['UVM', 'Uveal Melanoma', '葡萄膜黑色素瘤']  
 ***以上为关键词云***  
   我们在词云匹配使用了fuzzywuzzy模块，通过与关键词的匹配度计算degree。  
 >  如果在进行关键词云匹配过程中程序终端报错有可能是因为米娜桑的计算机没有安装Visual C++ Build Tools for Visual Studio 2015 with Update 3。  
@@ -133,32 +137,32 @@
 -  当没有相关论文时，degree为**None**，即基本没人做过这个基因的任何研究。  
 
   程序会自动对miRNA进行分类，根据米娜桑在配置文件中设置的`model`值进行下一步搜索。
-- ### <span id='title6'>mirWalk查询</span>  
+- ### <span id='title5'>mirWalk查询</span>  
   ***此步不需要操作，仅说明原理***  
 >  [miRWalk](http://mirwalk.umm.uni-heidelberg.de/)是一个综合性的miRNA靶基因数据库，收录了Human、Mouse、Rat、Dog、cow等多个物种的miRNA靶基因信息，不仅仅记录了基因全长序列上的miRNA结合位点，也会将其与已有的12个miRNA靶标预测程序（DIANA-microTv4.0 , DIANA-microT-CDS , miRanda-rel2010 , mirBridge , miRDB4.0 , miRmap , miRNAMap, doRiNA i.e.,PicTar2, PITA RNA22v2 , RNAhybrid2.1 and Targetscan6.2 ）的预测结合信息集合进行结合关联。数据库一直在更新收录新的资料，第一版是在2011年发布，之后在2015年发布V2 版本，并登上了Nature methods杂志，目前更新到V3 版本。
 
   根据米娜桑填写的`model`值，程序会查询mirWalk数据库，程序通过pandas模块对下载到的csv文件进行解析，获取靶蛋白`bindingp` = 1的靶蛋白。  
-- ### <span id='title5'>miRDB查询</span>  
+- ### <span id='title6'>miRDB查询</span>  
   ***此步不需要操作，仅说明原理***  
 >  [miRDB](http://mirdb.org)是用于miRNA目标预测和功能注释的在线数据库。miRDB中的所有目标都由生物信息学工具MirTarget预测，该工具是通过分析来自高通量测序实验的数千个miRNA-目标相互作用而开发的。与miRNA结合和靶点下调相关的共同特征已被确定并用于通过机器学习方法预测miRNA靶点。
 
   根据米娜桑填写的`model`值，程序会查询miRDB数据库，程序通过xpath模块对页面进行解析，获取靶蛋白`Target Score` > 80的靶蛋白。
-- ### <span id='title6'>TargetScan查询</span>  
+- ### <span id='title7'>TargetScan查询</span>  
   ***此步不需要操作，仅说明原理***  
 >  [TargetScan](http://www.targetscan.org/vert_71/) 是一个miRNA 靶基因预测的网站, 包括了 人， 小鼠，果蝇 ， 线虫， 斑马鱼 共5个物种的miRNA 靶基因结果。
 
   根据米娜桑填写的`model`值，程序会查询TargetScan数据库，程序通过panads模块对下载到的xlsx文件进行解析，获取靶蛋白`Total context++ score` < -0.5 的靶蛋白。  
-- ### <span id='title7'>mirDIP查询</span>  
+- ### <span id='title8'>mirDIP查询</span>  
   ***此步不需要操作，仅说明原理***  
 >  [mirDIP](http://ophid.utoronto.ca/mirDIP/index.jsp)集成了30个来源数据库中human相关的靶基因信息，是最全面的人类miRNA靶基因数据库。
 
   根据米娜桑填写的`model`值，程序会查询mirDIP数据库，程序通过对下载到的tsv文件进行解析，获取靶蛋白`very high`的靶蛋白。
-- ### <span id='title8'>Tarbase查询</span>  
+- ### <span id='title9'>Tarbase查询</span>  
   ***此步不需要操作，仅说明原理***  
 >  [TarBase](https://dianalab.e-ce.uth.gr/html/diana/web/index.php?r=tarbasev8)收录各种实验验证过的miR-Target数据（只要是人和小鼠的靶基因信息），TarBase将实验证据分为low和high两类，low代表的是传统的实验手段，可靠性相对于高通量测序的分析结果更高一点，我们可以筛选low方法支持的miRNA靶基因信息，得到高质量的miRNA候选靶基因集。TarBase只提供在线检索，可以输入miRNA名称和/或基因名称，miRNA名称为miRBase数据库格式,基因名称支持gene symbol(基因名)和ensembl gene ID。
 
   根据米娜桑填写的`model`值，程序会查询Tarbase数据库，程序通过xpath模块对页面进行解析，获取靶蛋白`Score` > 5 的靶蛋白。  
-- ### <span id='title9'>韦恩图生成</span>  
+- ### <span id='title10'>韦恩图生成</span>  
   ***此步不需要操作，仅说明原理***  
   根据米娜桑填写的`venn`值，程序会将在各个数据库中查询到的高可能性靶蛋白取交集，并生成韦恩图和交集表格。  
 ![四交集韦恩图](picture/venn.png)  

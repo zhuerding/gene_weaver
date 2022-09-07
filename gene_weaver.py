@@ -10,6 +10,7 @@ from datetime import datetime
 import traceback
 import urllib.parse
 import urllib.request
+import json
 
 import logging
 import cairosvg
@@ -61,7 +62,7 @@ def analysis(a, obj5):
                 for line in f:
                     line = line.strip('\n').split('\t')
                     res = obj5.search(line[0])
-                    if res is None:
+                    if res is None or res.group("name") is None:
                         pass
                     else:
                         lst.append("hsa-miR-" + res.group("name"))
@@ -83,15 +84,189 @@ def analysis(a, obj5):
                 for line in f:
                     line = line.strip('\n').split('\t')
                     res = obj5.search(line[6])
-                    if res is None:
+                    if res is None or res.group("name") is None:
                         pass
                     else:
                         lst.append("hsa-miR-" + res.group("name"))
         gene_set = dict(Counter(lst))
         source = [key for key, value in gene_set.items() if value > 1]
+    if len(source) == 0:
+        print("没有读取到基因或者没有交集基因")
+        print('\033[1;33m 5\033[0m' + '秒后自动关闭程序')
+        time.sleep(5)
+        sys.exit()
     print("共" + str(len(source)) + "个交集miRNA")
     print(source)
     return source
+
+
+def picture_analysis(conf, output, b):
+    class picture_analysis(object):
+        def __init__(self, x, output):
+            self.proxy = str(conf[0]['proxy'])
+            self.gene = x
+            self.name = conf[2]["name"]
+            self.folder = conf[2]["folder"]
+            print(gene)
+            sheet = output.active
+            index = b[0].get(self.gene)
+            character_box = self.boxplot2(gene)
+            if character_box != 2:
+                character_surv = self.survival(gene)
+                if character_surv == character_box:
+                    print("综上分析，该miRNA的箱式图与生存曲线符合对应关系")
+                    if character_surv == 0:
+                        print("该miRNA为致癌基因")
+                        sheet.cell(index, 6, "carcinogenic")
+                        output.save(self.folder + '/' + self.name + '.xlsx')
+                        self.e = 1
+                        self.res_return()
+                    else:
+                        print("该miRNA为抑癌基因")
+                        sheet.cell(index, 6, "tumor suppressor")
+                        output.save(self.folder + '/' + self.name + '.xlsx')
+                        self.e = 1
+                        self.res_return()
+                else:
+                    print("该miRNA图像并不符合要求")
+                    sheet.cell(index, 1, '')
+                    output.save(self.folder + '/' + self.name + '.xlsx')
+                    self.e = 0
+                    self.res_return()
+            else:
+                print("该miRNA图像并不符合要求")
+                self.e = 0
+                self.res_return()
+
+        def res_return(self):
+            if self.e == 1:
+                return gene
+            else:
+                return 0
+
+        def boxplot2(self, gene):
+            print("正在开始箱式图分析")
+            miRNA = gene
+            cancer = str(conf[1]['cc'])
+            url = f'https://starbase.sysu.edu.cn/cgi-bin/starBase3PlotDiffExp.cgi?source=miRNA&gene={miRNA}&chart=boxplot' \
+                  f'&scale=log2&cancer={cancer}&_=1662252038176 '
+            headers = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/102.0.0.0 Safari/537.36 ",
+                       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/103.0.5060.114 Safari/537.36 Edg/103.0.1264.62 ",
+                       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/103.0.5060.114 Safari/537.36 Edg/103.0.1264.62 ",
+                       "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0"]
+            header_id = random.randint(0, 3)
+            header = {
+                "User-Agent": headers[header_id],
+            }
+            proxies = {
+                'http': 'http://' + self.proxy,
+                'https': 'https://' + self.proxy
+            }
+            if self.proxy:
+                resp = requests.get(url, headers=header, proxies=proxies)
+            else:
+                resp = requests.get(url, headers=header)
+            resp.encoding = 'utf-8'
+            data = json.loads(resp.text)
+            median1 = float(data['boxplotData'][1][3])
+            median2 = float(data['boxplotData'][0][3])
+            res = []
+            [res.append(i) for i in data['dataMatrix'] if i not in res]
+            if len(res) >= 5:
+                return 2
+            if median1 < 0.95*median2:
+                return 0
+            elif median1 > 1.05*median2:
+                return 1
+            else:
+                return 2
+
+        def survival(self, gene):
+            import re
+            print("正在开始生存曲线分析")
+            miRNA = gene
+            cancer = str(conf[1]['cc'])
+            url = f'https://starbase.sysu.edu.cn/cgi-bin/starBase3PlotSurvExp.cgi?source=miRNA&gene={miRNA}&chart' \
+                  f'=survival&scale=log2&cancer={cancer}&_=1662280526636 '
+            headers = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/102.0.0.0 Safari/537.36 ",
+                       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/103.0.5060.114 Safari/537.36 Edg/103.0.1264.62 ",
+                       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/103.0.5060.114 Safari/537.36 Edg/103.0.1264.62 ",
+                       "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0"]
+            header_id = random.randint(0, 3)
+            header = {
+                "User-Agent": headers[header_id],
+            }
+            proxies = {
+                'http': 'http://' + self.proxy,
+                'https': 'https://' + self.proxy
+            }
+            if self.proxy:
+                resp = requests.get(url, headers=header, proxies=proxies)
+            else:
+                resp = requests.get(url, headers=header)
+            resp.encoding = 'utf-8'
+            data = json.loads(resp.text)
+            if data['data'][0]['name'] == "high":
+                low_lst = data['data'][1]['text']
+                high_lst = data['data'][0]['text']
+            else:
+                low_lst = data['data'][0]['text']
+                high_lst = data['data'][1]['text']
+            obj = re.compile(r'time:(?P<time>.*?)<br/>surv:(?P<surv>.*)')
+            low_time = []
+            for item in low_lst:
+                content = item.replace(" ", "")
+                res = obj.findall(content)
+                for i in res:
+                    if 0.62 > float(i[1]) > 0.48:
+                        low_time.append(float(i[0]))
+            low_sum_time = 0
+            for item in low_time:
+                low_sum_time += item
+            low_average_time = low_sum_time / len(low_time)
+            high_time = []
+            for item in high_lst:
+                content = item.replace(" ", "")
+                res = obj.findall(content)
+                for i in res:
+                    if 0.62 > float(i[1]) > 0.48:
+                        high_time.append(float(i[0]))
+            high_sum_time = 0
+            for item in high_time:
+                high_sum_time += item
+            high_average_time = high_sum_time / len(high_time)
+            low = low_average_time
+            high = high_average_time
+            if low > 1.05 * high:
+                return 0
+            elif low < 0.95 * high:
+                return 1
+            else:
+                return 2
+
+    gene_list = tuple(b[1])
+    gap = float(conf[0]['gap'])
+    num = 1
+    lst = []
+    appear = {}
+    for gene in gene_list:
+        print("")
+        print("图像分析目前至", num, "/", len(gene_list))
+        analysis = picture_analysis(gene, output)
+        name = analysis.res_return()
+        if name != 0:
+            lst.append(name)
+        time.sleep(gap)
+        num = num + 1
+        index = b[0].get(gene)
+        appear[gene] = index
+    return appear, lst
 
 
 # ualcan数据库差异表达查询
@@ -448,7 +623,7 @@ def sur_query(a, obj, obj2, obj3, output, conf):
                 output.save(folder + '/' + name + '.xlsx')
     print('')
     print("生存曲线查询完毕")
-    return appear
+    return a[0], appear
 
 
 # 论文分析函数
@@ -551,21 +726,21 @@ def cnki(a, output, conf, mix):
             if degree['max'] >= 80:
                 print('识别完毕，可疑度为', '\033[1;31mVery High\033[0m', '，不建议进行靶基因筛查')
                 mix[gene] = {'cnki_degree': 1, 'index': a[0].get(gene)}
-                sheet.cell(index, 6, '\033[1;31mVery High\033[0m')
+                sheet.cell(index, 7, '\033[1;31mVery High\033[0m')
                 output.save(folder + '/' + name + '.xlsx')
             if 30 <= degree['max'] <= 80 or degree['average'] >= 50:
                 print('识别完毕，可疑度为', '\033[1;32mHigh\033[0m', '，建议手动确认后进行靶基因筛查')
                 mix[gene] = {'cnki_degree': 2, 'index': a[0].get(gene)}
-                sheet.cell(index, 6, 'High')
+                sheet.cell(index, 7, 'High')
                 output.save(folder + '/' + name + '.xlsx')
             if degree['max'] <= 30:
                 print('识别完毕，可疑度为', '\033[1;33mlow\033[0m', '，建议手动确认后进行靶基因筛查')
                 mix[gene] = {'cnki_degree': 3, 'index': a[0].get(gene)}
-                sheet.cell(index, 6, 'Low')
+                sheet.cell(index, 7, 'Low')
                 output.save(folder + '/' + name + '.xlsx')
         else:
             print("中国知网中没有关于该miRNA的可疑结果:", "\033[1;36mNone\033[0m")
-            sheet.cell(index, 6, 'None')
+            sheet.cell(index, 7, 'None')
             mix[gene] = {'cnki_degree': 4, 'index': a[0].get(gene)}
             output.save(folder + '/' + name + '.xlsx')
     return mix
@@ -619,23 +794,23 @@ def pubmed(a, output, conf, mix):
                 print('识别完毕，可疑度为' + '\033[1;31mVery High\033[0m' + '，不建议进行靶基因筛查')
                 mix[gene]['pubmed_degree'] = 1
                 mix[gene]['index'] = a[0].get(gene)
-                sheet.cell(index, 7, 'Very High')
+                sheet.cell(index, 8, 'Very High')
                 output.save(folder + '/' + name + '.xlsx')
             if 60 <= degree['max'] <= 80 or degree['average'] >= 30:
                 print('识别完毕，可疑度为', '\033[1;32mHigh\033[0m', '，建议手动确认后进行靶基因筛查')
                 mix[gene]['pubmed_degree'] = 2
                 mix[gene]['index'] = a[0].get(gene)
-                sheet.cell(index, 7, 'High')
+                sheet.cell(index, 8, 'High')
                 output.save(folder + '/' + name + '.xlsx')
             if degree['max'] <= 60:
                 print('识别完毕，可疑度为', '\033[1;33mLow\033[0m', '，建议手动确认后进行靶基因筛查')
                 mix[gene]['pubmed_degree'] = 3
                 mix[gene]['index'] = a[0].get(gene)
-                sheet.cell(index, 7, 'low')
+                sheet.cell(index, 8, 'low')
                 output.save(folder + '/' + name + '.xlsx')
         else:
             print("PubMed中没有关于该miRNA的可疑结果:", "\033[1;36mNone\033[0m")
-            sheet.cell(index, 7, 'None')
+            sheet.cell(index, 8, 'None')
             mix[gene]['pubmed_degree'] = 4
             mix[gene]['index'] = a[0].get(gene)
             output.save(folder + '/' + name + '.xlsx')
@@ -868,7 +1043,7 @@ def ini():
                  "\n# 支持数据库：TarBase（https://dianalab.e-ce.uth.gr/html/diana/web/index.php?r=tarbasev8）" \
                  "\nprotein = ['mirdb','mirdip','mirwalk','targetscan','tarbase']" \
                  "\n# 文献重合度检索，在miRNA文献重合度为某等级以上进行靶基因检索\n# 可写参数：4（None）、3（low）、2（high）、1（very high）、0（all）" \
-                 "\n# 当不填写文献检索数据库且仍需筛查靶基因时，请使用参数0，其他情况不要使用\n# 文献重合度界定详情请阅读./readme.md文件\nmodel = 3"\
+                 "\n# 当不填写文献检索数据库且仍需筛查靶基因时，请使用参数0，其他情况不要使用\n# 文献重合度界定详情请阅读./readme.md文件\nmodel = 3" \
                  "\n# 是否生成靶蛋白韦恩图（查询的数据库数需>=2），是为1，否为0\nvenn = 1\n# 在靶蛋白搜索时是否保存数据库导出的csv文件，是为1，否为0\nsave = 1"
         f.write(config)
         f.close()
@@ -1595,8 +1770,9 @@ def main():
     sheet['C1'] = 'survival analysis pvalue(starbase)'
     sheet['D1'] = 'expression pvalue(ualcan)'
     sheet['E1'] = 'survival analysis pvalue(ualcan)'
-    sheet['F1'] = 'cnki'
-    sheet['G1'] = 'PubMed'
+    sheet['F1'] = 'gene character'
+    sheet['G1'] = 'cnki'
+    sheet['H1'] = 'PubMed'
     output.save(folder + '/' + name + '.xlsx')
     print('\n')
     print("开始查询https://starbase.sysu.edu.cn/数据库")
@@ -1605,7 +1781,8 @@ def main():
     print('')
     print("开始查询生存曲线")
     b = sur_query(a, obj, obj2, obj3, output, conf)
-    if not b:
+    c = picture_analysis(conf, output, b)
+    if not c:
         print('\n')
         print("\033[3;31m没有符合条件的miRNA\033[0m")
         os.remove(folder + '/' + name + '.xlsx')
@@ -1614,29 +1791,29 @@ def main():
         sys.exit()
     else:
         print('')
-        print("以下miRNA可以使用", b)
+        print("以下miRNA可以使用", c[1])
         if 'ualcan' in conf[1]["db"]:
             print('')
             print("开始查询http://ualcan.path.uab.edu/数据库")
             print("开始查询差异表达")
-            km_expression(a, obj4, output, conf)
+            km_expression(c, obj4, output, conf)
             print('')
             print("开始查询生存曲线")
-            km_sur_query(a, output, conf)
+            km_sur_query(c, output, conf)
         mix = {}
         if 'cnki' in conf[1]["paper"]:
             print('')
             print("开始https://www.cnki.net/文献检索")
-            mix = cnki(a, output, conf, mix)
+            mix = cnki(c, output, conf, mix)
         if 'pubmed' in conf[1]['paper']:
             print('')
             print("开始https://pubmed.ncbi.nlm.nih.gov/文献检索")
-            pubmed(a, output, conf, mix)
+            pubmed(c, output, conf, mix)
         print('\n')
         print('')
         if mix != {}:
             print('开始靶基因筛查')
-            route(conf, mix, a)
+            route(conf, mix, c)
         print("正在生成文件")
         if 'ualcan' in conf[1]['db']:
             pass
@@ -1725,7 +1902,7 @@ def log(folder):
 def information():
     print("欢迎使用", "\033[1;36mGene Weaver\033[0m")
     print("查看目前功能及注意事项请移步readme.md")
-    print('本程序版本' + '\033[3;31mV1.5.0002\033[0m')
+    print('本程序版本' + '\033[3;31mV1.6.0\033[0m')
     print('BUG反馈、创意分享请联系\033[3;36mzhuerding@zhuerding.top\033[0m')
     print('\n')
     time.sleep(1)
@@ -1734,18 +1911,30 @@ def information():
 # 更新函数
 def update():
     import re
-    url = 'https://github.com/zhuerding/gene_weaver'
-    version = '1.5.0002'
-    resp = requests.get(url)
+    url = 'https://geneweaver.zhuerding.top'
+    version = '1.6.0'
+    headers = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+               "Chrome/102.0.0.0 Safari/537.36 ",
+               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+               "Chrome/103.0.5060.114 Safari/537.36 Edg/103.0.1264.62 ",
+               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+               "Chrome/103.0.5060.114 Safari/537.36 Edg/103.0.1264.62 ",
+               "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0"]
+    header_id = random.randint(0, 3)
+    header = {
+        "User-Agent": headers[header_id],
+    }
+    resp = requests.get(url, headers=header)
     resp.encoding = 'utf-8'
-    obj = re.compile(r'>当前版本：V (.*?)  更新日志')
+    obj = re.compile(r'当前版本：<strong><em>V (.*?)</em></strong>')
     res = obj.findall(resp.text)
     for re in res:
+        print(re)
         if re != version:
             print('有版本更新')
             print('更新日志详见：' + '\033[1;36mhttps://github.com/zhuerding/gene_weaver/blob/master/update.log\033[0m')
             print('源代码地址：' + '\033[1;36mhttps://github.com/zhuerding/gene_weaver\033[0m')
-            print('安装包地址：' + '\033[1;36https://pan.baidu.com/s/1tc3yXbjyLs0K-LLsSKYs2A?pwd=pgsc\033[0m')
+            print('安装包地址：' + '\033[1;36mhttps://pan.baidu.com/s/1tc3yXbjyLs0K-LLsSKYs2A?pwd=pgsc\033[0m')
 
 
 if __name__ == '__main__':
@@ -1756,6 +1945,6 @@ if __name__ == '__main__':
     t2 = time.time()
     time = t2 - t1
     print('共运行' + f'\033[1;36m{time}\033[0m' + '秒，超过了全国99.99%的用户')
-    print('本程序版本' + '\033[3;31mV1.5.0002\033[0m')
+    print('本程序版本' + '\033[3;31mV1.6.0\033[0m')
     update()
     input('谢谢使用，按任意键退出程序')
